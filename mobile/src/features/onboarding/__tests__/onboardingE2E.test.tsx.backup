@@ -1,0 +1,680 @@
+/**
+ * Onboarding E2E Tests
+ * オンボーディング機能のエンドツーエンドテスト
+ *
+ * テストシナリオ：
+ * 1. 完全なオンボーディングフロー（consent → complete）
+ * 2. 各ステップでの入力検証
+ * 3. 前後のナビゲーション
+ * 4. エラーハンドリング
+ * 5. データ永続化
+ */
+
+import React from 'react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react-native';
+import { OnboardingScreen } from '../screens/OnboardingScreen';
+import type {
+  OnboardingState,
+  GoalData,
+  UserProfileData,
+  Milestone,
+  ConsentData,
+  OnboardingSummary,
+} from '../types';
+
+// モック: expo-secure-store (React Nativeモジュール)
+jest.mock('expo-secure-store', () => ({
+  setItemAsync: jest.fn(),
+  getItemAsync: jest.fn(),
+  deleteItemAsync: jest.fn(),
+}));
+
+// モック: useGoalUseCase
+jest.mock('../hooks/useGoalUseCase', () => ({
+  useGoalUseCase: jest.fn(),
+}));
+
+// モック: useMilestoneUseCase
+jest.mock('../hooks/useMilestoneUseCase', () => ({
+  useMilestoneUseCase: jest.fn(),
+}));
+
+// モック: useProfileUseCase
+jest.mock('../hooks/useProfileUseCase', () => ({
+  useProfileUseCase: jest.fn(),
+}));
+
+// モック: services/auth
+jest.mock('@/services/auth', () => ({
+  SecureTokenStore: {
+    getAccessToken: jest.fn().mockResolvedValue('mock-access-token'),
+  },
+  TokenManager: jest.fn(),
+  BiometricAuth: jest.fn(),
+}));
+
+// モック: NetworkErrorHandler
+jest.mock('@/core/network/utils', () => ({
+  NetworkErrorHandler: {
+    handleError: jest.fn(),
+  },
+}));
+
+// モック: interceptors (LogLevel再定義エラー回避)
+jest.mock('@/core/network/interceptors', () => ({
+  AppError: class AppError extends Error {
+    constructor(message: string) {
+      super(message);
+      this.name = 'AppError';
+    }
+  },
+}));
+
+// テストデータ
+const mockGoalData: GoalData = {
+  title: 'TOEIC 800点を取得する',
+  kpi: 'TOEIC 800点以上',
+  duration: '6ヶ月',
+  obstacles: ['時間不足', 'モチベーション維持'],
+  plans: ['毎日1時間勉強', 'オンライン学習グループに参加'],
+};
+
+const mockProfileData: UserProfileData = {
+  lifestyle: '会社員（9-18時）',
+  focusTime: '夜（18-21時）',
+  workEnvironment: '自宅',
+  taskPace: '毎日少しずつ',
+  pastFailureReason: '時間不足',
+  skillLevel: '初心者',
+  difficultyPreference: '適度に挑戦的',
+};
+
+const mockMilestones: Milestone[] = Array.from({ length: 10 }, (_, i) => ({
+  station: i + 1,
+  title: `合目${i + 1}`,
+  description: `${i + 1}合目の説明`,
+  estimatedDuration: `${i + 1}週間`,
+  completionCriteria: `${i + 1}合目の完了基準`,
+}));
+
+const mockConsentData: ConsentData = {
+  dataCollection: true,
+  privacyPolicy: true,
+  timestamp: Date.now(),
+};
+
+describe('Onboarding E2E Tests', () => {
+  const mockOnComplete = jest.fn();
+  const mockOnCancel = jest.fn();
+  const userId = 'user-test-123';
+
+  // モックフックの戻り値
+  const mockGoalUseCase = require('../hooks/useGoalUseCase').useGoalUseCase;
+  const mockMilestoneUseCase = require('../hooks/useMilestoneUseCase').useMilestoneUseCase;
+  const mockProfileUseCase = require('../hooks/useProfileUseCase').useProfileUseCase;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+
+    // GoalUseCase モック設定
+    mockGoalUseCase.mockReturnValue({
+      analyzeGoal: jest.fn().mockResolvedValue({
+        isComplete: true,
+        smartAnalysis: {
+          specific: true,
+          measurable: true,
+          achievable: true,
+          relevant: true,
+          timeBound: true,
+        },
+        woopAnalysis: {
+          wish: mockGoalData.title,
+          outcome: 'グローバルに働ける',
+          obstacles: mockGoalData.obstacles,
+          plan: mockGoalData.plans,
+        },
+        missingElements: [],
+        suggestions: [],
+      }),
+      createGoal: jest.fn().mockResolvedValue({
+        id: 'goal-123',
+        ...mockGoalData,
+      }),
+    });
+
+    // MilestoneUseCase モック設定
+    mockMilestoneUseCase.mockReturnValue({
+      generateMilestones: jest.fn().mockResolvedValue(mockMilestones),
+      saveMilestones: jest.fn().mockResolvedValue(true),
+    });
+
+    // ProfileUseCase モック設定
+    mockProfileUseCase.mockReturnValue({
+      saveProfile: jest.fn().mockResolvedValue(true),
+    });
+  });
+
+  describe('完全なオンボーディングフロー', () => {
+    it('consent → complete まで正常に進むこと', async () => {
+      render(
+        <OnboardingScreen
+          userId={userId}
+          onComplete={mockOnComplete}
+          onCancel={mockOnCancel}
+        />
+      );
+
+      // 1. Consent Step
+      await waitFor(() => {
+        expect(screen.getByTestId('consent-step')).toBeDefined();
+      });
+
+      // データ収集同意
+      const dataCollectionCheckbox = screen.getByTestId('consent-data-collection');
+      fireEvent.press(dataCollectionCheckbox);
+
+      // プライバシーポリシー同意
+      const privacyPolicyCheckbox = screen.getByTestId('consent-privacy-policy');
+      fireEvent.press(privacyPolicyCheckbox);
+
+      // 次へボタンを押す
+      const consentNextButton = screen.getByTestId('consent-next-button');
+      fireEvent.press(consentNextButton);
+
+      // 2. Goal Step
+      await waitFor(() => {
+        expect(screen.getByTestId('goal-step')).toBeDefined();
+      });
+
+      // 目標入力
+      const goalInput = screen.getByTestId('goal-title-input');
+      fireEvent.changeText(goalInput, mockGoalData.title);
+
+      // KPI入力
+      const kpiInput = screen.getByTestId('goal-kpi-input');
+      fireEvent.changeText(kpiInput, mockGoalData.kpi);
+
+      // 次へボタンを押す
+      const goalNextButton = screen.getByTestId('goal-next-button');
+      fireEvent.press(goalNextButton);
+
+      // 3. Obstacles Step（省略可能 - すでにgoalステップで含まれる場合）
+      // ... （実装によって異なる）
+
+      // 4. Duration Step
+      await waitFor(() => {
+        expect(screen.getByTestId('duration-step')).toBeDefined();
+      });
+
+      // 期間選択
+      const durationButton = screen.getByTestId('duration-6months');
+      fireEvent.press(durationButton);
+
+      // 次へボタンを押す
+      const durationNextButton = screen.getByTestId('duration-next-button');
+      fireEvent.press(durationNextButton);
+
+      // 5. Commit Time Step
+      await waitFor(() => {
+        expect(screen.getByTestId('commit-time-step')).toBeDefined();
+      });
+
+      // コミットタイム選択
+      const commitTimeButton = screen.getByTestId('commit-time-1hour');
+      fireEvent.press(commitTimeButton);
+
+      // 次へボタンを押す
+      const commitTimeNextButton = screen.getByTestId('commit-time-next-button');
+      fireEvent.press(commitTimeNextButton);
+
+      // 6. Profile Step
+      await waitFor(() => {
+        expect(screen.getByTestId('profile-step')).toBeDefined();
+      });
+
+      // プロファイル入力（7質問）
+      const lifestyleButton = screen.getByTestId('profile-lifestyle-employee');
+      fireEvent.press(lifestyleButton);
+
+      const focusTimeButton = screen.getByTestId('profile-focus-time-evening');
+      fireEvent.press(focusTimeButton);
+
+      const workEnvButton = screen.getByTestId('profile-work-env-home');
+      fireEvent.press(workEnvButton);
+
+      const taskPaceButton = screen.getByTestId('profile-task-pace-daily');
+      fireEvent.press(taskPaceButton);
+
+      const failureReasonButton = screen.getByTestId('profile-failure-time');
+      fireEvent.press(failureReasonButton);
+
+      const skillLevelButton = screen.getByTestId('profile-skill-beginner');
+      fireEvent.press(skillLevelButton);
+
+      const difficultyButton = screen.getByTestId('profile-difficulty-moderate');
+      fireEvent.press(difficultyButton);
+
+      // 次へボタンを押す
+      const profileNextButton = screen.getByTestId('profile-next-button');
+      fireEvent.press(profileNextButton);
+
+      // 7. Milestone Step
+      await waitFor(() => {
+        expect(screen.getByTestId('milestone-step')).toBeDefined();
+      });
+
+      // マイルストーン生成ボタン
+      const generateButton = screen.getByTestId('milestone-generate-button');
+      fireEvent.press(generateButton);
+
+      // マイルストーン生成完了待機
+      await waitFor(() => {
+        expect(screen.getByTestId('milestone-list')).toBeDefined();
+      });
+
+      // 次へボタンを押す
+      const milestoneNextButton = screen.getByTestId('milestone-next-button');
+      fireEvent.press(milestoneNextButton);
+
+      // 8. Review Step
+      await waitFor(() => {
+        expect(screen.getByTestId('review-step')).toBeDefined();
+      });
+
+      // レビュー内容確認
+      expect(screen.getByText(mockGoalData.title)).toBeDefined();
+      expect(screen.getByText('6ヶ月')).toBeDefined();
+
+      // 完了ボタンを押す
+      const reviewCompleteButton = screen.getByTestId('review-complete-button');
+      fireEvent.press(reviewCompleteButton);
+
+      // 9. Complete Step
+      await waitFor(() => {
+        expect(screen.getByTestId('complete-step')).toBeDefined();
+      });
+
+      // onComplete コールバックが呼ばれること
+      await waitFor(() => {
+        expect(mockOnComplete).toHaveBeenCalled();
+      });
+
+      const summary: OnboardingSummary = mockOnComplete.mock.calls[0][0];
+      expect(summary.userId).toBe(userId);
+      expect(summary.goal.title).toBe(mockGoalData.title);
+      expect(summary.duration).toBe('6ヶ月');
+      expect(summary.profile).toBeDefined();
+      expect(summary.milestones.length).toBe(10);
+    });
+  });
+
+  describe('ナビゲーションテスト', () => {
+    it('「戻る」ボタンで前のステップに戻れること', async () => {
+      render(
+        <OnboardingScreen
+          userId={userId}
+          onComplete={mockOnComplete}
+          onCancel={mockOnCancel}
+        />
+      );
+
+      // Consent Step → Goal Step
+      await waitFor(() => {
+        expect(screen.getByTestId('consent-step')).toBeDefined();
+      });
+
+      const dataCollectionCheckbox = screen.getByTestId('consent-data-collection');
+      fireEvent.press(dataCollectionCheckbox);
+
+      const privacyPolicyCheckbox = screen.getByTestId('consent-privacy-policy');
+      fireEvent.press(privacyPolicyCheckbox);
+
+      const consentNextButton = screen.getByTestId('consent-next-button');
+      fireEvent.press(consentNextButton);
+
+      // Goal Step 表示確認
+      await waitFor(() => {
+        expect(screen.getByTestId('goal-step')).toBeDefined();
+      });
+
+      // 戻るボタンを押す
+      const goalBackButton = screen.getByTestId('goal-back-button');
+      fireEvent.press(goalBackButton);
+
+      // Consent Step に戻ること
+      await waitFor(() => {
+        expect(screen.getByTestId('consent-step')).toBeDefined();
+      });
+    });
+
+    it('Progress Bar が正しく更新されること', async () => {
+      render(
+        <OnboardingScreen
+          userId={userId}
+          onComplete={mockOnComplete}
+          onCancel={mockOnCancel}
+        />
+      );
+
+      // Consent Step（10%）
+      await waitFor(() => {
+        expect(screen.getByTestId('progress-bar')).toBeDefined();
+      });
+
+      let progressBar = screen.getByTestId('progress-bar');
+      expect(progressBar.props.progress).toBe(10);
+
+      // Goal Step へ進む
+      const dataCollectionCheckbox = screen.getByTestId('consent-data-collection');
+      fireEvent.press(dataCollectionCheckbox);
+
+      const privacyPolicyCheckbox = screen.getByTestId('consent-privacy-policy');
+      fireEvent.press(privacyPolicyCheckbox);
+
+      const consentNextButton = screen.getByTestId('consent-next-button');
+      fireEvent.press(consentNextButton);
+
+      // Goal Step（20%）
+      await waitFor(() => {
+        progressBar = screen.getByTestId('progress-bar');
+        expect(progressBar.props.progress).toBe(20);
+      });
+    });
+  });
+
+  describe('バリデーションテスト', () => {
+    it('同意画面で両方のチェックボックスが必須であること', async () => {
+      render(
+        <OnboardingScreen
+          userId={userId}
+          onComplete={mockOnComplete}
+          onCancel={mockOnCancel}
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId('consent-step')).toBeDefined();
+      });
+
+      // 1つだけチェック
+      const dataCollectionCheckbox = screen.getByTestId('consent-data-collection');
+      fireEvent.press(dataCollectionCheckbox);
+
+      // 次へボタンを押す
+      const consentNextButton = screen.getByTestId('consent-next-button');
+      fireEvent.press(consentNextButton);
+
+      // エラーメッセージが表示されること
+      await waitFor(() => {
+        expect(screen.getByText(/すべての項目に同意してください/i)).toBeDefined();
+      });
+
+      // まだConsent Stepにいること
+      expect(screen.getByTestId('consent-step')).toBeDefined();
+    });
+
+    it('目標が空の場合はエラーメッセージを表示すること', async () => {
+      render(
+        <OnboardingScreen
+          userId={userId}
+          onComplete={mockOnComplete}
+          onCancel={mockOnCancel}
+        />
+      );
+
+      // Consent Step をスキップ
+      await waitFor(() => {
+        expect(screen.getByTestId('consent-step')).toBeDefined();
+      });
+
+      const dataCollectionCheckbox = screen.getByTestId('consent-data-collection');
+      fireEvent.press(dataCollectionCheckbox);
+
+      const privacyPolicyCheckbox = screen.getByTestId('consent-privacy-policy');
+      fireEvent.press(privacyPolicyCheckbox);
+
+      const consentNextButton = screen.getByTestId('consent-next-button');
+      fireEvent.press(consentNextButton);
+
+      // Goal Step
+      await waitFor(() => {
+        expect(screen.getByTestId('goal-step')).toBeDefined();
+      });
+
+      // 何も入力せずに次へ
+      const goalNextButton = screen.getByTestId('goal-next-button');
+      fireEvent.press(goalNextButton);
+
+      // エラーメッセージが表示されること
+      await waitFor(() => {
+        expect(screen.getByText(/目標を入力してください/i)).toBeDefined();
+      });
+    });
+
+    it('プロファイルの7項目がすべて入力必須であること', async () => {
+      render(
+        <OnboardingScreen
+          userId={userId}
+          onComplete={mockOnComplete}
+          onCancel={mockOnCancel}
+        />
+      );
+
+      // Profile Step までスキップ（省略）
+      // ... （Consent, Goal, Duration, CommitTime を通過）
+
+      // Profile Step で一部のみ入力
+      await waitFor(() => {
+        expect(screen.getByTestId('profile-step')).toBeDefined();
+      });
+
+      const lifestyleButton = screen.getByTestId('profile-lifestyle-employee');
+      fireEvent.press(lifestyleButton);
+
+      // 他の項目は未入力
+      const profileNextButton = screen.getByTestId('profile-next-button');
+      fireEvent.press(profileNextButton);
+
+      // エラーメッセージが表示されること
+      await waitFor(() => {
+        expect(screen.getByText(/すべての質問に回答してください/i)).toBeDefined();
+      });
+    });
+
+    it('マイルストーンが10個生成されることを検証', async () => {
+      render(
+        <OnboardingScreen
+          userId={userId}
+          onComplete={mockOnComplete}
+          onCancel={mockOnCancel}
+        />
+      );
+
+      // Milestone Step までスキップ（省略）
+      // ...
+
+      await waitFor(() => {
+        expect(screen.getByTestId('milestone-step')).toBeDefined();
+      });
+
+      // マイルストーン生成ボタン
+      const generateButton = screen.getByTestId('milestone-generate-button');
+      fireEvent.press(generateButton);
+
+      // マイルストーン生成完了待機
+      await waitFor(() => {
+        expect(screen.getByTestId('milestone-list')).toBeDefined();
+      });
+
+      // 10個のマイルストーンが表示されること
+      const milestoneItems = screen.getAllByTestId(/milestone-item-/);
+      expect(milestoneItems.length).toBe(10);
+
+      // 各合目が1〜10であること
+      for (let i = 1; i <= 10; i++) {
+        expect(screen.getByTestId(`milestone-item-${i}`)).toBeDefined();
+      }
+    });
+  });
+
+  describe('エラーハンドリング', () => {
+    it('ネットワークエラー時はエラーメッセージを表示すること', async () => {
+      // GoalUseCase でエラーを発生させる
+      mockGoalUseCase.mockReturnValue({
+        analyzeGoal: jest.fn().mockRejectedValue(new Error('Network error')),
+        createGoal: jest.fn(),
+      });
+
+      render(
+        <OnboardingScreen
+          userId={userId}
+          onComplete={mockOnComplete}
+          onCancel={mockOnCancel}
+        />
+      );
+
+      // Goal Step まで進む
+      await waitFor(() => {
+        expect(screen.getByTestId('consent-step')).toBeDefined();
+      });
+
+      const dataCollectionCheckbox = screen.getByTestId('consent-data-collection');
+      fireEvent.press(dataCollectionCheckbox);
+
+      const privacyPolicyCheckbox = screen.getByTestId('consent-privacy-policy');
+      fireEvent.press(privacyPolicyCheckbox);
+
+      const consentNextButton = screen.getByTestId('consent-next-button');
+      fireEvent.press(consentNextButton);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('goal-step')).toBeDefined();
+      });
+
+      // 目標入力
+      const goalInput = screen.getByTestId('goal-title-input');
+      fireEvent.changeText(goalInput, mockGoalData.title);
+
+      // 次へボタンを押す
+      const goalNextButton = screen.getByTestId('goal-next-button');
+      fireEvent.press(goalNextButton);
+
+      // エラーメッセージが表示されること
+      await waitFor(() => {
+        expect(screen.getByText(/ネットワークエラーが発生しました/i)).toBeDefined();
+      });
+    });
+
+    it('マイルストーン生成エラー時はリトライボタンを表示すること', async () => {
+      // MilestoneUseCase でエラーを発生させる
+      mockMilestoneUseCase.mockReturnValue({
+        generateMilestones: jest.fn().mockRejectedValue(new Error('Generation failed')),
+        saveMilestones: jest.fn(),
+      });
+
+      render(
+        <OnboardingScreen
+          userId={userId}
+          onComplete={mockOnComplete}
+          onCancel={mockOnCancel}
+        />
+      );
+
+      // Milestone Step までスキップ（省略）
+      // ...
+
+      await waitFor(() => {
+        expect(screen.getByTestId('milestone-step')).toBeDefined();
+      });
+
+      // マイルストーン生成ボタン
+      const generateButton = screen.getByTestId('milestone-generate-button');
+      fireEvent.press(generateButton);
+
+      // エラーメッセージとリトライボタンが表示されること
+      await waitFor(() => {
+        expect(screen.getByText(/マイルストーン生成に失敗しました/i)).toBeDefined();
+        expect(screen.getByTestId('milestone-retry-button')).toBeDefined();
+      });
+    });
+  });
+
+  describe('データ永続化テスト', () => {
+    it('オンボーディング完了後にサマリーが正しく保存されること', async () => {
+      render(
+        <OnboardingScreen
+          userId={userId}
+          onComplete={mockOnComplete}
+          onCancel={mockOnCancel}
+        />
+      );
+
+      // 完全なフロー実行（省略 - 上記の「完全なオンボーディングフロー」テストと同じ）
+      // ...
+
+      // onComplete が呼ばれた後、サマリーが正しいこと
+      await waitFor(() => {
+        expect(mockOnComplete).toHaveBeenCalled();
+      });
+
+      const summary: OnboardingSummary = mockOnComplete.mock.calls[0][0];
+
+      // サマリーの検証
+      expect(summary).toMatchObject({
+        userId,
+        goal: expect.objectContaining({
+          title: expect.any(String),
+          kpi: expect.any(String),
+        }),
+        duration: expect.any(String),
+        dailyCommitTime: expect.any(String),
+        profile: expect.objectContaining({
+          lifestyle: expect.any(String),
+          focusTime: expect.any(String),
+          workEnvironment: expect.any(String),
+          taskPace: expect.any(String),
+          pastFailureReason: expect.any(String),
+          skillLevel: expect.any(String),
+          difficultyPreference: expect.any(String),
+        }),
+        milestones: expect.arrayContaining([
+          expect.objectContaining({
+            station: expect.any(Number),
+            title: expect.any(String),
+          }),
+        ]),
+        consent: expect.objectContaining({
+          dataCollection: true,
+          privacyPolicy: true,
+          timestamp: expect.any(Number),
+        }),
+      });
+
+      // マイルストーンが10個であること
+      expect(summary.milestones.length).toBe(10);
+    });
+  });
+
+  describe('キャンセル機能テスト', () => {
+    it('キャンセルボタンを押すとonCancelが呼ばれること', async () => {
+      render(
+        <OnboardingScreen
+          userId={userId}
+          onComplete={mockOnComplete}
+          onCancel={mockOnCancel}
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId('consent-step')).toBeDefined();
+      });
+
+      // キャンセルボタンを押す
+      const cancelButton = screen.getByTestId('onboarding-cancel-button');
+      fireEvent.press(cancelButton);
+
+      // onCancel コールバックが呼ばれること
+      expect(mockOnCancel).toHaveBeenCalled();
+    });
+  });
+});

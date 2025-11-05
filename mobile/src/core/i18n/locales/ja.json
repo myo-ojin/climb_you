@@ -1,0 +1,157 @@
+{
+  "common": {
+    "appName": "Climb You",
+    "close": "閉じる",
+    "cancel": "キャンセル",
+    "confirm": "確認",
+    "save": "保存",
+    "delete": "削除",
+    "edit": "編集",
+    "back": "戻る",
+    "next": "次へ",
+    "skip": "スキップ",
+    "loading": "読み込み中...",
+    "error": "エラー",
+    "success": "成功",
+    "retry": "再試行",
+    "ok": "OK"
+  },
+  "auth": {
+    "login": "ログイン",
+    "logout": "ログアウト",
+    "loginWithApple": "Appleでログイン",
+    "loginWithGoogle": "Googleでログイン",
+    "welcome": "Climb Youへようこそ",
+    "welcomeMessage": "あなたの目標を山登りに変えましょう"
+  },
+  "onboarding": {
+    "consent": {
+      "title": "ようこそ",
+      "message": "Climb Youは、あなたの長期目標を日々のクエストに変換し、山登りのメタファーで達成をサポートします。",
+      "privacyPolicy": "プライバシーポリシー",
+      "termsOfService": "利用規約",
+      "agree": "同意して始める"
+    },
+    "goalInput": {
+      "title": "目標を設定",
+      "placeholder": "あなたの長期目標を入力してください",
+      "hint": "例: TOEIC 800点を取る、毎日運動する習慣をつける"
+    },
+    "smartAnalysis": {
+      "title": "目標を分析中",
+      "analyzing": "SMART分析を実行しています..."
+    },
+    "milestonesGeneration": {
+      "title": "マイルストーンを生成中",
+      "generating": "10合目のマイルストーンを作成しています..."
+    },
+    "profiling": {
+      "title": "プロファイリング",
+      "question1": "毎日何時頃にクエストに取り組めますか？",
+      "question2": "あなたのライフスタイルは？",
+      "question3": "仕事環境は？"
+    },
+    "complete": {
+      "title": "準備完了！",
+      "message": "さあ、山登りを始めましょう！"
+    }
+  },
+  "home": {
+    "title": "ホーム",
+    "todayQuests": "今日のクエスト",
+    "progress": "進捗",
+    "streak": "ストリーク",
+    "currentStation": "現在の合目",
+    "totalSteps": "累計歩数",
+    "refreshing": "更新中...",
+    "noQuests": "今日のクエストはありません",
+    "questsAvailable": "今日のクエストが{{count}}件あります"
+  },
+  "quest": {
+    "title": "クエスト",
+    "detail": "クエスト詳細",
+    "complete": "完了",
+    "skip": "見送り",
+    "obstruct": "阻害",
+    "type": {
+      "small": "スモール",
+      "medium": "ミディアム",
+      "validation": "検証"
+    },
+    "difficulty": {
+      "easy": "簡単",
+      "medium": "中級",
+      "challenging": "チャレンジング"
+    },
+    "status": {
+      "pending": "未完了",
+      "completed": "完了",
+      "skipped": "見送り",
+      "obstructed": "阻害"
+    },
+    "estimatedTime": "推定時間: {{time}}分",
+    "completionCriteria": "完了基準",
+    "evidenceUpload": "証跡をアップロード",
+    "skipReason": "見送り理由を入力してください",
+    "obstructionReason": "阻害理由を入力してください",
+    "completed": "クエストを完了しました！",
+    "skipped": "クエストを見送りました",
+    "obstructed": "クエストが阻害されました"
+  },
+  "progress": {
+    "title": "進捗",
+    "currentStation": "{{station}}合目",
+    "stepsToNext": "次の合目まで{{steps}}歩",
+    "totalSteps": "累計{{steps}}歩",
+    "currentStreak": "{{days}}日連続",
+    "maxStreak": "最長{{days}}日",
+    "ranking": "ランキング",
+    "yourRank": "あなたの順位: {{rank}}位"
+  },
+  "notifications": {
+    "title": "通知",
+    "settings": "通知設定",
+    "questReady": "今日のクエスト準備完了",
+    "questReadyBody": "新しいクエストが3つ届きました",
+    "milestoneAchieved": "合目達成！",
+    "milestoneAchievedBody": "{{station}}合目に到達しました",
+    "streakReminder": "ストリーク継続中",
+    "streakReminderBody": "{{days}}日連続です。今日も頑張りましょう！",
+    "weeklyRanking": "週次ランキング",
+    "weeklyRankingBody": "今週は{{rank}}位です",
+    "stagnationAlert": "停滞アラート",
+    "stagnationAlertBody": "30日間同じ合目です。見直しますか？"
+  },
+  "settings": {
+    "title": "設定",
+    "account": "アカウント",
+    "notifications": "通知",
+    "language": "言語",
+    "theme": "テーマ",
+    "accessibility": "アクセシビリティ",
+    "dataManagement": "データ管理",
+    "export": "データをエクスポート",
+    "delete": "データを削除",
+    "privacy": "プライバシー",
+    "about": "このアプリについて",
+    "version": "バージョン",
+    "japanese": "日本語",
+    "english": "English",
+    "changeLanguage": "言語を変更"
+  },
+  "errors": {
+    "networkError": "ネットワークエラーが発生しました",
+    "serverError": "サーバーエラーが発生しました",
+    "unknownError": "不明なエラーが発生しました",
+    "tryAgain": "もう一度お試しください",
+    "offline": "オフラインです"
+  },
+  "accessibility": {
+    "questDetails": "{{title}}、{{type}}、推定時間{{time}}分、難易度{{difficulty}}",
+    "questCompleted": "クエスト「{{title}}」を完了しました",
+    "questSkipped": "クエスト「{{title}}」を見送りました",
+    "milestoneReached": "{{station}}合目に到達しました",
+    "screenReaderEnabled": "スクリーンリーダーが有効です",
+    "largeTextEnabled": "大きなテキストサイズが有効です"
+  }
+}

@@ -1,0 +1,157 @@
+{
+  "common": {
+    "appName": "Climb You",
+    "close": "Close",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "next": "Next",
+    "skip": "Skip",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "retry": "Retry",
+    "ok": "OK"
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "loginWithApple": "Sign in with Apple",
+    "loginWithGoogle": "Sign in with Google",
+    "welcome": "Welcome to Climb You",
+    "welcomeMessage": "Transform your goals into a mountain climb"
+  },
+  "onboarding": {
+    "consent": {
+      "title": "Welcome",
+      "message": "Climb You transforms your long-term goals into daily quests, supporting your achievement through the metaphor of mountain climbing.",
+      "privacyPolicy": "Privacy Policy",
+      "termsOfService": "Terms of Service",
+      "agree": "Agree and Start"
+    },
+    "goalInput": {
+      "title": "Set Your Goal",
+      "placeholder": "Enter your long-term goal",
+      "hint": "Example: Score 800 on TOEIC, Build a daily exercise habit"
+    },
+    "smartAnalysis": {
+      "title": "Analyzing Goal",
+      "analyzing": "Running SMART analysis..."
+    },
+    "milestonesGeneration": {
+      "title": "Generating Milestones",
+      "generating": "Creating 10 milestone stations..."
+    },
+    "profiling": {
+      "title": "Profiling",
+      "question1": "What time can you work on quests daily?",
+      "question2": "What's your lifestyle?",
+      "question3": "What's your work environment?"
+    },
+    "complete": {
+      "title": "Ready!",
+      "message": "Let's start climbing the mountain!"
+    }
+  },
+  "home": {
+    "title": "Home",
+    "todayQuests": "Today's Quests",
+    "progress": "Progress",
+    "streak": "Streak",
+    "currentStation": "Current Station",
+    "totalSteps": "Total Steps",
+    "refreshing": "Refreshing...",
+    "noQuests": "No quests for today",
+    "questsAvailable": "You have {{count}} quests today"
+  },
+  "quest": {
+    "title": "Quest",
+    "detail": "Quest Detail",
+    "complete": "Complete",
+    "skip": "Skip",
+    "obstruct": "Obstruct",
+    "type": {
+      "small": "Small",
+      "medium": "Medium",
+      "validation": "Validation"
+    },
+    "difficulty": {
+      "easy": "Easy",
+      "medium": "Medium",
+      "challenging": "Challenging"
+    },
+    "status": {
+      "pending": "Pending",
+      "completed": "Completed",
+      "skipped": "Skipped",
+      "obstructed": "Obstructed"
+    },
+    "estimatedTime": "Est. Time: {{time}} min",
+    "completionCriteria": "Completion Criteria",
+    "evidenceUpload": "Upload Evidence",
+    "skipReason": "Please enter skip reason",
+    "obstructionReason": "Please enter obstruction reason",
+    "completed": "Quest completed!",
+    "skipped": "Quest skipped",
+    "obstructed": "Quest obstructed"
+  },
+  "progress": {
+    "title": "Progress",
+    "currentStation": "Station {{station}}",
+    "stepsToNext": "{{steps}} steps to next station",
+    "totalSteps": "{{steps}} total steps",
+    "currentStreak": "{{days}} day streak",
+    "maxStreak": "Max {{days}} days",
+    "ranking": "Ranking",
+    "yourRank": "Your Rank: #{{rank}}"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "settings": "Notification Settings",
+    "questReady": "Today's Quests Ready",
+    "questReadyBody": "3 new quests have arrived",
+    "milestoneAchieved": "Milestone Achieved!",
+    "milestoneAchievedBody": "You reached Station {{station}}",
+    "streakReminder": "Streak Ongoing",
+    "streakReminderBody": "{{days}} day streak. Keep it up!",
+    "weeklyRanking": "Weekly Ranking",
+    "weeklyRankingBody": "You're ranked #{{rank}} this week",
+    "stagnationAlert": "Stagnation Alert",
+    "stagnationAlertBody": "30 days at same station. Review?"
+  },
+  "settings": {
+    "title": "Settings",
+    "account": "Account",
+    "notifications": "Notifications",
+    "language": "Language",
+    "theme": "Theme",
+    "accessibility": "Accessibility",
+    "dataManagement": "Data Management",
+    "export": "Export Data",
+    "delete": "Delete Data",
+    "privacy": "Privacy",
+    "about": "About",
+    "version": "Version",
+    "japanese": "日本語",
+    "english": "English",
+    "changeLanguage": "Change Language"
+  },
+  "errors": {
+    "networkError": "Network error occurred",
+    "serverError": "Server error occurred",
+    "unknownError": "Unknown error occurred",
+    "tryAgain": "Please try again",
+    "offline": "You are offline"
+  },
+  "accessibility": {
+    "questDetails": "{{title}}, {{type}}, estimated {{time}} minutes, difficulty {{difficulty}}",
+    "questCompleted": "Quest \"{{title}}\" completed",
+    "questSkipped": "Quest \"{{title}}\" skipped",
+    "milestoneReached": "Reached Station {{station}}",
+    "screenReaderEnabled": "Screen reader enabled",
+    "largeTextEnabled": "Large text size enabled"
+  }
+}
