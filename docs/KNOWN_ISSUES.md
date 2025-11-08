@@ -19,7 +19,7 @@
 | SYNC-004 | OfflineDataProvider未完成 | Sync | 🟡 Medium | 🔴 Open | 1〜2時間 |
 | SYNC-005 | SyncManager戻り値の型不一致 | Sync | 🟢 Low | ✅ Resolved | - |
 | SYNC-006 | LocalDataSource同期メソッド不足 | Sync | 🟡 Medium | 🔴 Open | 1時間 |
-| I18N-001 | ESLint設定の不一致 | i18n | 🔴 High | 🔴 Open | 20分 |
+| I18N-001 | ESLint設定の不一致 | i18n | 🔴 High | ✅ Resolved | - |
 | I18N-002 | 言語バリデーションの欠如 | i18n | 🔴 High | ✅ Resolved | - |
 | I18N-003 | 注意事項のハードコード | i18n | 🔴 High | ✅ Resolved | - |
 | I18N-004 | 相対時刻のマジックナンバー | i18n | 🟡 Medium | ✅ Resolved | - |
@@ -1181,12 +1181,12 @@ const unsyncedGoals = await this.db.getAllAsync(
 
 # 🌐 i18n (Internationalization) Issues
 
-## 🔴 I18N-001: ESLint Configuration Mismatch
+## ✅ I18N-001: ESLint Configuration Mismatch
 
-**Priority**: 🔴 High  
-**Status**: 🔴 Open  
-**Impact**: Code Quality, CI/CD  
-**Estimated Time**: 20分
+**Priority**: 🔴 High
+**Status**: ✅ Resolved (2025-11-08)
+**Impact**: Code Quality, CI/CD
+**Resolution Time**: 5分
 
 ### 問題の概要
 
@@ -1243,6 +1243,56 @@ export default [
   },
 ];
 ```
+
+### 解決内容
+
+**実装完了:**
+
+ESLintをv8.57.1（v8系の最新安定版）へダウングレードし、既存の`.eslintrc.js`設定ファイルをそのまま使用できるようにしました。
+
+**実装内容:**
+- ✅ `mobile/package.json`で`"eslint": "8.57.1"`に固定
+- ✅ node_modules削除 + npm install実行
+- ✅ ESLint v8.57.1のインストール確認
+- ✅ lint実行で正常動作を確認
+
+**選択した解決策:**
+- **Option A**: ESLint v8へダウングレード（採用）
+  - 既存の`.eslintrc.js`がそのまま使える
+  - 変更が最小限
+  - リスクが非常に低い
+  - package.jsonの意図（v8使用）に合致
+
+**Option B（不採用）**: ESLint v9へ完全移行
+- `.eslintrc.js` → `eslint.config.js`への変換が必要
+- プラグインの互換性確認が必要
+- 作業時間: 30分〜1時間
+
+**変更前の問題:**
+```bash
+ESLint: 9.39.1
+ESLint couldn't find an eslint.config.(js|mjs|cjs) file.
+```
+
+**変更後の結果:**
+```bash
+$ npx eslint --version
+v8.57.1
+
+$ npm run lint
+✓ ESLint実行成功（warnings/errorsあり = 正常動作）
+```
+
+**メリット:**
+- ✅ ESLintが正常に動作
+- ✅ コード品質チェックが機能
+- ✅ CI/CDパイプラインで使用可能
+- ✅ 既存設定を維持
+- ✅ 安定性が高い
+
+**注意:**
+- ESLint v8は2024年10月にEOL（サポート終了）となったため、deprecation warningが表示されますが、動作に問題はありません
+- 将来的にv9への移行を検討する場合は、Flat Config形式への変換が必要です
 
 ---
 
