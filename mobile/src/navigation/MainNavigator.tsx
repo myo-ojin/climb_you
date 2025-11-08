@@ -18,7 +18,7 @@ import {
   GoalsListScreen,
   GoalEditScreen,
 } from '@/features/goals/screens';
-import { SettingsScreen, NotificationSettingsScreen, PrivacyPolicyScreen } from '@/features/settings/screens';
+import { SettingsScreen, LanguageSettingsScreen, NotificationSettingsScreen, PrivacyPolicyScreen } from '@/features/settings/screens';
 import { ProgressScreen } from '@/features/progress/screens';
 import { RankingScreen } from '@/features/ranking/screens';
 import { MilestoneAchievementScreen } from '@/features/milestones/screens';
@@ -127,6 +127,15 @@ export const MainNavigator: React.FC = () => {
         component={SettingsScreen}
         options={{
           title: '設定',
+        }}
+      />
+
+      {/* Language Settings */}
+      <Stack.Screen
+        name="LanguageSettings"
+        component={LanguageSettingsScreen}
+        options={{
+          title: '言語設定',
         }}
       />
 

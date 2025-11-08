@@ -23,7 +23,7 @@ import { PerformanceMonitor } from '@/utils/PerformanceMonitor';
 import { LazyLoadManager } from '@/utils/LazyLoadManager';
 import { SyncManager } from '@/features/sync/services/SyncManager';
 import { logHermesInfo, logOptimizationHints } from '@/utils/HermesDetector';
-import '@/core/i18n'; // i18n初期化
+import '@/config/i18n'; // i18n初期化
 
 export default function App() {
   const [isInitializing, setIsInitializing] = useState(true);

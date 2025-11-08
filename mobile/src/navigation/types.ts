@@ -34,6 +34,7 @@ export type MainStackParamList = {
   Progress: undefined;
   Ranking: undefined;
   Settings: undefined;
+  LanguageSettings: undefined;
   NotificationSettings: undefined;
   PrivacyPolicy: undefined;
   GoalDetail: { goalId: string };
