@@ -143,6 +143,7 @@ export default {
     title: '設定',
     language: '言語',
     language_description: 'アプリの表示言語を選択',
+    language_change_immediate: '言語は即座に変更されます',
     notifications: '通知',
     notifications_description: '通知の設定を管理',
     profile: 'プロファイル',
@@ -208,6 +209,7 @@ export default {
     timeout_error_description: '時間がかかりすぎています',
     offline: 'オフライン',
     offline_description: 'インターネットに接続されていません',
+    language_change_failed: '言語の変更に失敗しました: {{error}}',
   },
 
   // 相対時刻

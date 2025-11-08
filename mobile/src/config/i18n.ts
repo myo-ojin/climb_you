@@ -20,7 +20,13 @@ const LANGUAGE_KEY = 'app_language';
 const initI18n = async () => {
   try {
     // AsyncStorageから保存された言語設定を取得
-    const savedLanguage = await AsyncStorage.getItem(LANGUAGE_KEY);
+    let savedLanguage: string | null = null;
+    try {
+      savedLanguage = await AsyncStorage.getItem(LANGUAGE_KEY);
+    } catch (storageError) {
+      console.warn('[i18n] Failed to read saved language from AsyncStorage:', storageError);
+      // 続行（デバイス言語またはデフォルトにフォールバック）
+    }
 
     // デバイスの言語を取得（例: "ja-JP" → "ja"）
     const deviceLanguage = Localization.locale.split('-')[0];
@@ -82,14 +88,36 @@ const initI18n = async () => {
 /**
  * 言語を変更する
  * @param language - 変更する言語コード（'ja' または 'en'）
+ * @throws {Error} サポートされていない言語コードの場合
  */
 export const changeLanguage = async (language: string): Promise<void> => {
+  const supportedLanguages = ['ja', 'en'];
+
+  // 言語コードのバリデーション
+  if (!supportedLanguages.includes(language)) {
+    const error = new Error(
+      `Unsupported language: ${language}. Supported languages: ${supportedLanguages.join(', ')}`
+    );
+    console.error('[i18n]', error.message);
+    throw error;
+  }
+
   try {
     // AsyncStorageに保存
-    await AsyncStorage.setItem(LANGUAGE_KEY, language);
+    try {
+      await AsyncStorage.setItem(LANGUAGE_KEY, language);
+    } catch (storageError) {
+      console.error('[i18n] Failed to save language to AsyncStorage:', storageError);
+      throw new Error(`Failed to save language preference: ${storageError instanceof Error ? storageError.message : String(storageError)}`);
+    }
 
     // i18nの言語を変更
-    await i18n.changeLanguage(language);
+    try {
+      await i18n.changeLanguage(language);
+    } catch (i18nError) {
+      console.error('[i18n] Failed to change i18n language:', i18nError);
+      throw new Error(`Failed to change language: ${i18nError instanceof Error ? i18nError.message : String(i18nError)}`);
+    }
 
     console.log(`[i18n] Language changed to: ${language}`);
   } catch (error) {

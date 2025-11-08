@@ -1,7 +1,7 @@
 # Known Issues - climb-you Mobile App
 
-**Last Updated**: 2025-10-23  
-**Total Issues**: 10 (4 Testing + 2 Architecture + 4 Sync)
+**Last Updated**: 2025-11-08
+**Total Issues**: 16 (4 Testing + 2 Architecture + 4 Sync + 6 i18n)
 
 ---
 
@@ -19,6 +19,12 @@
 | SYNC-004 | OfflineDataProvider未完成 | Sync | 🟡 Medium | 🔴 Open | 1〜2時間 |
 | SYNC-005 | SyncManager戻り値の型不一致 | Sync | 🟢 Low | ✅ Resolved | - |
 | SYNC-006 | LocalDataSource同期メソッド不足 | Sync | 🟡 Medium | 🔴 Open | 1時間 |
+| I18N-001 | ESLint設定の不一致 | i18n | 🔴 High | 🔴 Open | 20分 |
+| I18N-002 | 言語バリデーションの欠如 | i18n | 🔴 High | ✅ Resolved | - |
+| I18N-003 | 注意事項のハードコード | i18n | 🔴 High | ✅ Resolved | - |
+| I18N-004 | 相対時刻のマジックナンバー | i18n | 🟡 Medium | ✅ Resolved | - |
+| I18N-005 | パフォーマンス最適化不足 | i18n | 🟡 Medium | ✅ Resolved | - |
+| I18N-006 | エラーハンドリングの不備 | i18n | 🟡 Medium | ✅ Resolved | - |
 
 ---
 
@@ -1172,3 +1178,618 @@ const unsyncedGoals = await this.db.getAllAsync(
 
 **Author**: Development Team  
 **Reviewers**: TBD
+
+# 🌐 i18n (Internationalization) Issues
+
+## 🔴 I18N-001: ESLint Configuration Mismatch
+
+**Priority**: 🔴 High  
+**Status**: 🔴 Open  
+**Impact**: Code Quality, CI/CD  
+**Estimated Time**: 20分
+
+### 問題の概要
+
+ESLint v9へのアップグレードにより、設定ファイル形式が変更されましたが、プロジェクトは古い`.eslintrc.js`形式を使用しているため、リンターが動作していません。
+
+### 現状
+
+**エラー内容:**
+```
+ESLint: 9.39.1
+ESLint couldn't find an eslint.config.(js|mjs|cjs) file.
+From ESLint v9.0.0, the default configuration file is now eslint.config.js.
+```
+
+### 影響
+
+- ❌ `npm run lint` が実行できない
+- ❌ コード品質チェックが機能しない
+- ❌ CI/CDパイプラインでのリントチェックが失敗する
+
+### 推奨解決策
+
+`.eslintrc.js` を新形式の `eslint.config.js` に移行する。
+
+**移行例:**
+```javascript
+// eslint.config.js (新形式)
+import js from '@eslint/js';
+import tsPlugin from '@typescript-eslint/eslint-plugin';
+import tsParser from '@typescript-eslint/parser';
+
+export default [
+  js.configs.recommended,
+  {
+    files: ['**/*.ts', '**/*.tsx'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        ecmaVersion: 2021,
+        sourceType: 'module',
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
+    },
+    plugins: {
+      '@typescript-eslint': tsPlugin,
+    },
+    rules: {
+      // ルール定義
+      '@typescript-eslint/no-unused-vars': 'warn',
+      '@typescript-eslint/no-explicit-any': 'warn',
+    },
+  },
+];
+```
+
+---
+
+## ✅ I18N-002: Missing Language Validation
+
+**Priority**: 🔴 High
+**Status**: ✅ Resolved (2025-11-08)
+**Impact**: Security, Data Integrity
+**Resolution Time**: 10分
+
+### 問題の概要
+
+`changeLanguage` 関数で言語コードのバリデーションが行われていないため、サポート外の言語コードが渡される可能性があります。
+
+### 現状のコード
+
+**mobile/src/config/i18n.ts:86-99**
+```typescript
+export const changeLanguage = async (language: string): Promise<void> => {
+  // バリデーションなし！
+  await AsyncStorage.setItem(LANGUAGE_KEY, language);
+  await i18n.changeLanguage(language);
+}
+```
+
+### 問題点
+
+- ❌ 任意の文字列が受け入れられる
+- ❌ `changeLanguage('invalid')` が実行可能
+- ❌ エラーハンドリングが不十分
+
+### 推奨解決策
+
+サポートされている言語のバリデーションを追加する。
+
+**修正例:**
+```typescript
+export const changeLanguage = async (language: string): Promise<void> => {
+  const supportedLanguages = ['ja', 'en'];
+
+  if (!supportedLanguages.includes(language)) {
+    throw new Error(`Unsupported language: ${language}. Supported: ${supportedLanguages.join(', ')}`);
+  }
+
+  try {
+    await AsyncStorage.setItem(LANGUAGE_KEY, language);
+    await i18n.changeLanguage(language);
+    console.log(`[i18n] Language changed to: ${language}`);
+  } catch (error) {
+    console.error('[i18n] Failed to change language:', error);
+    throw error;
+  }
+};
+```
+
+### 解決内容
+
+**実装完了:**
+
+`mobile/src/config/i18n.ts` の `changeLanguage` 関数にバリデーションを追加しました。
+
+**実装内容:**
+- ✅ サポート言語リストの定義（'ja', 'en'）
+- ✅ 言語コードの検証
+- ✅ 不正な言語コードの場合はエラーをスロー
+- ✅ 詳細なエラーメッセージ
+- ✅ try-catch によるエラーハンドリング
+- ✅ コンソールログの追加
+
+**メリット:**
+- ✅ データ整合性の向上
+- ✅ セキュリティリスクの軽減
+- ✅ デバッグの容易化
+
+---
+
+## ✅ I18N-003: Hardcoded UI Text
+
+**Priority**: 🔴 High
+**Status**: ✅ Resolved (2025-11-08)
+**Impact**: i18n Consistency
+**Resolution Time**: 5分
+
+### 問題の概要
+
+`LanguageSettingsScreen.tsx` の注意事項セクションに、ハードコードされた日本語と英語のテキストが含まれており、i18nシステムを使用していません。
+
+### 現状のコード
+
+**mobile/src/features/settings/screens/LanguageSettingsScreen.tsx:121-126**
+```typescript
+<Text style={styles.noteText}>
+  • 言語は即座に変更されます
+</Text>
+<Text style={styles.noteText}>
+  • The language will be changed immediately
+</Text>
+```
+
+### 問題点
+
+- ❌ i18nシステムを使用していない
+- ❌ 翻訳ファイルとの一貫性がない
+- ❌ 新しい言語を追加する際に修正が必要
+
+### 推奨解決策
+
+翻訳キーを使用する。
+
+**ステップ1: 翻訳キーを追加**
+```typescript
+// mobile/src/locales/ja/index.ts
+settings: {
+  // ...
+  language_change_immediate: '言語は即座に変更されます',
+}
+
+// mobile/src/locales/en/index.ts
+settings: {
+  // ...
+  language_change_immediate: 'The language will be changed immediately',
+}
+```
+
+**ステップ2: コンポーネントを修正**
+```typescript
+<Text style={styles.noteText}>
+  • {t('settings.language_change_immediate')}
+</Text>
+```
+
+### 解決内容
+
+**実装完了:**
+
+ハードコードされたテキストを翻訳キーに置き換えました。
+
+**実装内容:**
+- ✅ `mobile/src/locales/ja/index.ts` に `language_change_immediate` キーを追加
+- ✅ `mobile/src/locales/en/index.ts` に `language_change_immediate` キーを追加
+- ✅ `LanguageSettingsScreen.tsx` のハードコードテキストを `{t('settings.language_change_immediate')}` に置換
+
+**変更前:**
+```typescript
+<Text style={styles.noteText}>• 言語は即座に変更されます</Text>
+<Text style={styles.noteText}>• The language will be changed immediately</Text>
+```
+
+**変更後:**
+```typescript
+<Text style={styles.noteText}>• {t('settings.language_change_immediate')}</Text>
+```
+
+**メリット:**
+- ✅ i18nシステムとの一貫性
+- ✅ 新しい言語追加が容易
+- ✅ メンテナンス性の向上
+
+---
+
+## ✅ I18N-004: Magic Numbers in Relative Time
+
+**Priority**: 🟡 Medium
+**Status**: ✅ Resolved (2025-11-08)
+**Impact**: Maintainability, Readability
+**Resolution Time**: 10分
+
+### 問題の概要
+
+`useTranslation.ts` の `formatRelativeTime` 関数で、マジックナンバー（60、3600、86400など）が使用されており、可読性と保守性が低下しています。
+
+### 現状のコード
+
+**mobile/src/hooks/useTranslation.ts:102-123**
+```typescript
+if (diffInSeconds < 60) { ... }
+else if (diffInSeconds < 3600) { ... }
+else if (diffInSeconds < 86400) { ... }
+else if (diffInSeconds < 604800) { ... }
+else if (diffInSeconds < 2592000) { ... }
+```
+
+### 問題点
+
+- ❌ マジックナンバーが可読性を下げている
+- ❌ 変更時にすべての箇所を修正する必要がある
+- ❌ 意図が不明確
+
+### 推奨解決策
+
+定数化する。
+
+**修正例:**
+```typescript
+const TIME_CONSTANTS = {
+  MINUTE: 60,
+  HOUR: 3600,
+  DAY: 86400,
+  WEEK: 604800,
+  MONTH: 2592000,
+} as const;
+
+const formatRelativeTime = (date: Date): string => {
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (diffInSeconds < TIME_CONSTANTS.MINUTE) {
+    return t('time_ago.just_now');
+  } else if (diffInSeconds < TIME_CONSTANTS.HOUR) {
+    const minutes = Math.floor(diffInSeconds / TIME_CONSTANTS.MINUTE);
+    return t('time_ago.minutes_ago', { count: minutes });
+  } else if (diffInSeconds < TIME_CONSTANTS.DAY) {
+    const hours = Math.floor(diffInSeconds / TIME_CONSTANTS.HOUR);
+    return t('time_ago.hours_ago', { count: hours });
+  }
+  // ...
+};
+```
+
+### 解決内容
+
+**実装完了:**
+
+`mobile/src/hooks/useTranslation.ts` にTIME_CONSTANTS定数を追加し、formatRelativeTime関数内のマジックナンバーを置き換えました。
+
+**実装内容:**
+- ✅ TIME_CONSTANTS オブジェクトの定義（MINUTE, HOUR, DAY, WEEK, MONTH）
+- ✅ formatRelativeTime 関数内の全てのマジックナンバーを定数に置換
+- ✅ as const による型安全性の確保
+
+**追加コード:**
+```typescript
+const TIME_CONSTANTS = {
+  MINUTE: 60,
+  HOUR: 3600,
+  DAY: 86400,
+  WEEK: 604800,
+  MONTH: 2592000,
+} as const;
+```
+
+**メリット:**
+- ✅ 可読性の大幅な向上
+- ✅ 保守性の向上（一箇所での変更が可能）
+- ✅ 意図が明確になる
+- ✅ バグの混入リスク低減
+
+---
+
+## ✅ I18N-005: Performance Optimization Needed
+
+**Priority**: 🟡 Medium
+**Status**: ✅ Resolved (2025-11-08)
+**Impact**: Performance, Re-rendering
+**Resolution Time**: 15分
+
+### 問題の概要
+
+`LanguageSettingsScreen.tsx` と `useTranslation.ts` でパフォーマンス最適化（メモ化）が行われていないため、不要な再レンダリングが発生する可能性があります。
+
+### 現状のコード
+
+**mobile/src/features/settings/screens/LanguageSettingsScreen.tsx:32-60**
+```typescript
+const handleLanguageChange = async (languageCode: string) => {
+  // メモ化されていない
+};
+```
+
+**mobile/src/hooks/useTranslation.ts:102-124**
+```typescript
+const formatRelativeTime = (date: Date): string => {
+  // 毎回新しい関数が作成される
+};
+```
+
+### 問題点
+
+- ⚠️ 不要な再レンダリングが発生
+- ⚠️ パフォーマンスの低下
+- ⚠️ メモリ効率が悪い
+
+### 推奨解決策
+
+`useCallback` と `useMemo` を使用する。
+
+**LanguageSettingsScreen:**
+```typescript
+const handleLanguageChange = useCallback(async (languageCode: string) => {
+  if (languageCode === currentLanguage) {
+    return;
+  }
+  // 処理
+}, [currentLanguage, changeLanguage]);
+```
+
+**useTranslation:**
+```typescript
+const formatRelativeTime = useCallback((date: Date): string => {
+  // 実装
+}, [t]);
+```
+
+### 解決内容
+
+**実装完了:**
+
+`LanguageSettingsScreen.tsx` と `useTranslation.ts` の両方でパフォーマンス最適化を実装しました。
+
+**実装内容:**
+
+**1. LanguageSettingsScreen.tsx**
+- ✅ `useCallback` をインポート
+- ✅ `handleLanguageChange` を `useCallback` でメモ化
+- ✅ 依存配列: `[currentLanguage, changeLanguage, t]`
+
+**2. useTranslation.ts**
+- ✅ `useCallback` と `useMemo` をインポート
+- ✅ 以下の関数を `useCallback` でメモ化:
+  - `formatDate` (依存: `[i18n.language]`)
+  - `formatDateTime` (依存: `[i18n.language]`)
+  - `formatTime` (依存: `[i18n.language]`)
+  - `formatNumber` (依存: `[i18n.language]`)
+  - `formatCurrency` (依存: `[i18n.language]`)
+  - `formatRelativeTime` (依存: `[t]`)
+  - `changeAppLanguage` (依存: `[]`)
+- ✅ 以下の値を `useMemo` でメモ化:
+  - `currentLanguage`
+  - `isJapanese`
+  - `isEnglish`
+
+**メリット:**
+- ✅ 不要な再レンダリングの削減
+- ✅ パフォーマンスの向上
+- ✅ メモリ効率の改善
+- ✅ 言語切り替え時のスムーズな動作
+
+---
+
+## ✅ I18N-006: Error Handling Improvements
+
+**Priority**: 🟡 Medium
+**Status**: ✅ Resolved (2025-11-08)
+**Impact**: User Experience, Debugging
+**Resolution Time**: 15分
+
+### 問題の概要
+
+エラーハンドリングが不十分で、エラーメッセージが具体的でなく、AsyncStorageのエラーが個別にハンドリングされていません。
+
+### 問題箇所
+
+#### 1. 一般的なエラーメッセージ
+
+**mobile/src/features/settings/screens/LanguageSettingsScreen.tsx:52-56**
+```typescript
+Alert.alert(
+  t('common.error'),
+  t('error.unknown_error'), // 具体的でない
+  [{ text: t('common.ok') }]
+);
+```
+
+#### 2. AsyncStorageエラーの無視
+
+**mobile/src/config/i18n.ts:22-23**
+```typescript
+const savedLanguage = await AsyncStorage.getItem(LANGUAGE_KEY);
+// エラーハンドリングなし
+```
+
+### 推奨解決策
+
+#### 1. 具体的なエラーメッセージ
+
+**翻訳キーを追加:**
+```typescript
+// locales/ja/index.ts
+error: {
+  // ...
+  language_change_failed: '言語の変更に失敗しました: {{error}}',
+}
+```
+
+**エラーハンドリングを改善:**
+```typescript
+Alert.alert(
+  t('common.error'),
+  t('error.language_change_failed', { error: error.message }),
+  [{ text: t('common.ok') }]
+);
+```
+
+#### 2. AsyncStorageエラーのハンドリング
+
+```typescript
+let savedLanguage: string | null = null;
+try {
+  savedLanguage = await AsyncStorage.getItem(LANGUAGE_KEY);
+} catch (error) {
+  console.warn('[i18n] Failed to read saved language:', error);
+  // 続行（デバイス言語またはデフォルトにフォールバック）
+}
+```
+
+### 解決内容
+
+**実装完了:**
+
+エラーハンドリングを包括的に改善し、具体的なエラーメッセージとAsyncStorageエラーの個別ハンドリングを実装しました。
+
+**実装内容:**
+
+**1. 翻訳ファイルへのエラーキー追加**
+- ✅ `mobile/src/locales/ja/index.ts` に `language_change_failed` キーを追加
+- ✅ `mobile/src/locales/en/index.ts` に `language_change_failed` キーを追加
+- ✅ エラーメッセージに変数（{{error}}）を含める
+
+**2. LanguageSettingsScreen.tsx のエラーハンドリング改善**
+- ✅ 具体的なエラーメッセージを表示
+- ✅ Error インスタンスの判定とメッセージ抽出
+- ✅ ユーザーフレンドリーなエラー表示
+
+**変更前:**
+```typescript
+Alert.alert(
+  t('common.error'),
+  t('error.unknown_error'), // 一般的なメッセージ
+  [{ text: t('common.ok') }]
+);
+```
+
+**変更後:**
+```typescript
+const errorMessage = error instanceof Error ? error.message : String(error);
+Alert.alert(
+  t('common.error'),
+  t('error.language_change_failed', { error: errorMessage }), // 具体的なメッセージ
+  [{ text: t('common.ok') }]
+);
+```
+
+**3. config/i18n.ts のAsyncStorageエラーハンドリング**
+- ✅ `initI18n` 関数でのAsyncStorage読み込みエラーハンドリング
+- ✅ `changeLanguage` 関数でのAsyncStorage保存エラーハンドリング
+- ✅ i18n変更エラーの個別ハンドリング
+- ✅ 詳細なコンソールログの追加
+
+**initI18n の改善:**
+```typescript
+let savedLanguage: string | null = null;
+try {
+  savedLanguage = await AsyncStorage.getItem(LANGUAGE_KEY);
+} catch (storageError) {
+  console.warn('[i18n] Failed to read saved language from AsyncStorage:', storageError);
+  // 続行（デバイス言語またはデフォルトにフォールバック）
+}
+```
+
+**changeLanguage の改善:**
+```typescript
+try {
+  await AsyncStorage.setItem(LANGUAGE_KEY, language);
+} catch (storageError) {
+  console.error('[i18n] Failed to save language to AsyncStorage:', storageError);
+  throw new Error(`Failed to save language preference: ${...}`);
+}
+
+try {
+  await i18n.changeLanguage(language);
+} catch (i18nError) {
+  console.error('[i18n] Failed to change i18n language:', i18nError);
+  throw new Error(`Failed to change language: ${...}`);
+}
+```
+
+**メリット:**
+- ✅ デバッグの容易化（具体的なエラーメッセージ）
+- ✅ ユーザー体験の向上（わかりやすいエラー表示）
+- ✅ エラーの原因特定が迅速に
+- ✅ AsyncStorageエラーの適切なハンドリング
+
+---
+
+# 📊 i18n Priority Justification
+
+## I18N-001: High Priority (ESLint)
+
+**理由:**
+- 🔴 コード品質チェックが機能しない
+- 🔴 CI/CDパイプラインに影響
+- ✅ 修正が比較的簡単（20分）
+
+## I18N-002: High Priority (Validation)
+
+**理由:**
+- 🔴 セキュリティリスク
+- 🔴 データ整合性の問題
+- ✅ 修正が非常に簡単（10分）
+
+## I18N-003: High Priority (Hardcoded Text)
+
+**理由:**
+- 🔴 i18n一貫性の問題
+- 🔴 将来の言語追加に影響
+- ✅ 修正が非常に簡単（5分）
+
+## I18N-004: Medium Priority (Magic Numbers)
+
+**理由:**
+- ⚠️ 保守性の低下
+- ⚠️ 可読性の低下
+- ✅ 機能には影響しない
+
+## I18N-005: Medium Priority (Performance)
+
+**理由:**
+- ⚠️ パフォーマンスへの影響は軽微
+- ⚠️ ユーザー体験の低下は限定的
+- ✅ 最適化の余地がある
+
+## I18N-006: Medium Priority (Error Handling)
+
+**理由:**
+- ⚠️ デバッグの困難さ
+- ⚠️ ユーザー体験の低下
+- ✅ クリティカルではない
+
+---
+
+# 🔄 i18n Resolution Timeline
+
+## 推奨対応順序
+
+### Phase 1: High Priority Issues (45分)
+1. **I18N-002** (10分) - 言語バリデーション追加
+2. **I18N-003** (5分) - ハードコードテキスト修正
+3. **I18N-001** (20分) - ESLint設定移行
+4. **検証** (10分) - 動作確認とテスト
+
+### Phase 2: Medium Priority Issues (40分)
+5. **I18N-004** (10分) - マジックナンバー定数化
+6. **I18N-005** (15分) - パフォーマンス最適化
+7. **I18N-006** (15分) - エラーハンドリング強化
+
+**Phase 1合計推定時間**: 45分  
+**Phase 2合計推定時間**: 40分  
+**全体合計推定時間**: 85分（約1.5時間）
+
+---

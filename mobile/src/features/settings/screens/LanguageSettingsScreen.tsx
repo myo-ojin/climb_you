@@ -3,7 +3,7 @@
  * 言語設定画面
  */
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -29,35 +29,39 @@ export const LanguageSettingsScreen: React.FC = () => {
   /**
    * 言語変更ハンドラー
    */
-  const handleLanguageChange = async (languageCode: string) => {
-    if (languageCode === currentLanguage) {
-      return; // 既に選択されている言語の場合は何もしない
-    }
+  const handleLanguageChange = useCallback(
+    async (languageCode: string) => {
+      if (languageCode === currentLanguage) {
+        return; // 既に選択されている言語の場合は何もしない
+      }
 
-    try {
-      setIsChanging(true);
+      try {
+        setIsChanging(true);
 
-      await changeLanguage(languageCode);
+        await changeLanguage(languageCode);
 
-      // 成功メッセージを表示（変更後の言語で表示される）
-      Alert.alert(
-        t('common.done'),
-        t('settings.language_description'),
-        [{ text: t('common.ok') }]
-      );
-    } catch (error) {
-      console.error('[LanguageSettings] Failed to change language:', error);
+        // 成功メッセージを表示（変更後の言語で表示される）
+        Alert.alert(
+          t('common.done'),
+          t('settings.language_description'),
+          [{ text: t('common.ok') }]
+        );
+      } catch (error) {
+        console.error('[LanguageSettings] Failed to change language:', error);
 
-      // エラーメッセージを表示
-      Alert.alert(
-        t('common.error'),
-        t('error.unknown_error'),
-        [{ text: t('common.ok') }]
-      );
-    } finally {
-      setIsChanging(false);
-    }
-  };
+        // エラーメッセージを表示（具体的なエラー内容を含める）
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        Alert.alert(
+          t('common.error'),
+          t('error.language_change_failed', { error: errorMessage }),
+          [{ text: t('common.ok') }]
+        );
+      } finally {
+        setIsChanging(false);
+      }
+    },
+    [currentLanguage, changeLanguage, t]
+  );
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
@@ -119,10 +123,7 @@ export const LanguageSettingsScreen: React.FC = () => {
               • {t('settings.language_description')}
             </Text>
             <Text style={styles.noteText}>
-              • 言語は即座に変更されます
-            </Text>
-            <Text style={styles.noteText}>
-              • The language will be changed immediately
+              • {t('settings.language_change_immediate')}
             </Text>
           </View>
         </View>

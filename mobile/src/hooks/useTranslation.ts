@@ -3,8 +3,20 @@
  * i18nextをラップし、翻訳機能と日付・数値フォーマットを提供
  */
 
+import { useCallback, useMemo } from 'react';
 import { useTranslation as useI18nTranslation } from 'react-i18next';
 import { changeLanguage } from '@/config/i18n';
+
+/**
+ * 時間定数（秒単位）
+ */
+const TIME_CONSTANTS = {
+  MINUTE: 60,
+  HOUR: 3600,
+  DAY: 86400,
+  WEEK: 604800,
+  MONTH: 2592000,
+} as const;
 
 /**
  * カスタムuseTranslationフック
@@ -19,54 +31,60 @@ export const useTranslation = () => {
    * @param options - Intl.DateTimeFormatOptionsオプション
    * @returns フォーマットされた日付文字列
    */
-  const formatDate = (
-    date: Date,
-    options?: Intl.DateTimeFormatOptions
-  ): string => {
-    const defaultOptions: Intl.DateTimeFormatOptions = {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    };
+  const formatDate = useCallback(
+    (date: Date, options?: Intl.DateTimeFormatOptions): string => {
+      const defaultOptions: Intl.DateTimeFormatOptions = {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      };
 
-    return new Intl.DateTimeFormat(
-      i18n.language,
-      options || defaultOptions
-    ).format(date);
-  };
+      return new Intl.DateTimeFormat(
+        i18n.language,
+        options || defaultOptions
+      ).format(date);
+    },
+    [i18n.language]
+  );
 
   /**
    * 日付と時刻をフォーマットする
    * @param date - フォーマットする日付
    * @returns フォーマットされた日付時刻文字列
    */
-  const formatDateTime = (date: Date): string => {
-    const options: Intl.DateTimeFormatOptions = {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: i18n.language === 'en', // 英語は12時間制、日本語は24時間制
-    };
+  const formatDateTime = useCallback(
+    (date: Date): string => {
+      const options: Intl.DateTimeFormatOptions = {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: i18n.language === 'en', // 英語は12時間制、日本語は24時間制
+      };
 
-    return new Intl.DateTimeFormat(i18n.language, options).format(date);
-  };
+      return new Intl.DateTimeFormat(i18n.language, options).format(date);
+    },
+    [i18n.language]
+  );
 
   /**
    * 時刻をフォーマットする
    * @param date - フォーマットする日付
    * @returns フォーマットされた時刻文字列
    */
-  const formatTime = (date: Date): string => {
-    const options: Intl.DateTimeFormatOptions = {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: i18n.language === 'en', // 英語は12時間制、日本語は24時間制
-    };
+  const formatTime = useCallback(
+    (date: Date): string => {
+      const options: Intl.DateTimeFormatOptions = {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: i18n.language === 'en', // 英語は12時間制、日本語は24時間制
+      };
 
-    return new Intl.DateTimeFormat(i18n.language, options).format(date);
-  };
+      return new Intl.DateTimeFormat(i18n.language, options).format(date);
+    },
+    [i18n.language]
+  );
 
   /**
    * 数値をフォーマットする
@@ -74,12 +92,12 @@ export const useTranslation = () => {
    * @param options - Intl.NumberFormatOptionsオプション
    * @returns フォーマットされた数値文字列
    */
-  const formatNumber = (
-    num: number,
-    options?: Intl.NumberFormatOptions
-  ): string => {
-    return new Intl.NumberFormat(i18n.language, options).format(num);
-  };
+  const formatNumber = useCallback(
+    (num: number, options?: Intl.NumberFormatOptions): string => {
+      return new Intl.NumberFormat(i18n.language, options).format(num);
+    },
+    [i18n.language]
+  );
 
   /**
    * 通貨をフォーマットする（将来の課金機能用）
@@ -87,67 +105,73 @@ export const useTranslation = () => {
    * @param currency - 通貨コード（'JPY', 'USD'など）
    * @returns フォーマットされた通貨文字列
    */
-  const formatCurrency = (amount: number, currency: string = 'JPY'): string => {
-    return new Intl.NumberFormat(i18n.language, {
-      style: 'currency',
-      currency,
-    }).format(amount);
-  };
+  const formatCurrency = useCallback(
+    (amount: number, currency: string = 'JPY'): string => {
+      return new Intl.NumberFormat(i18n.language, {
+        style: 'currency',
+        currency,
+      }).format(amount);
+    },
+    [i18n.language]
+  );
 
   /**
    * 相対時刻を表示する
    * @param date - 比較する日付
    * @returns 相対時刻の文字列（例：「3分前」、「2時間前」）
    */
-  const formatRelativeTime = (date: Date): string => {
-    const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  const formatRelativeTime = useCallback(
+    (date: Date): string => {
+      const now = new Date();
+      const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    if (diffInSeconds < 60) {
-      return t('time_ago.just_now');
-    } else if (diffInSeconds < 3600) {
-      const minutes = Math.floor(diffInSeconds / 60);
-      return t('time_ago.minutes_ago', { count: minutes });
-    } else if (diffInSeconds < 86400) {
-      const hours = Math.floor(diffInSeconds / 3600);
-      return t('time_ago.hours_ago', { count: hours });
-    } else if (diffInSeconds < 604800) {
-      const days = Math.floor(diffInSeconds / 86400);
-      return t('time_ago.days_ago', { count: days });
-    } else if (diffInSeconds < 2592000) {
-      const weeks = Math.floor(diffInSeconds / 604800);
-      return t('time_ago.weeks_ago', { count: weeks });
-    } else {
-      const months = Math.floor(diffInSeconds / 2592000);
-      return t('time_ago.months_ago', { count: months });
-    }
-  };
+      if (diffInSeconds < TIME_CONSTANTS.MINUTE) {
+        return t('time_ago.just_now');
+      } else if (diffInSeconds < TIME_CONSTANTS.HOUR) {
+        const minutes = Math.floor(diffInSeconds / TIME_CONSTANTS.MINUTE);
+        return t('time_ago.minutes_ago', { count: minutes });
+      } else if (diffInSeconds < TIME_CONSTANTS.DAY) {
+        const hours = Math.floor(diffInSeconds / TIME_CONSTANTS.HOUR);
+        return t('time_ago.hours_ago', { count: hours });
+      } else if (diffInSeconds < TIME_CONSTANTS.WEEK) {
+        const days = Math.floor(diffInSeconds / TIME_CONSTANTS.DAY);
+        return t('time_ago.days_ago', { count: days });
+      } else if (diffInSeconds < TIME_CONSTANTS.MONTH) {
+        const weeks = Math.floor(diffInSeconds / TIME_CONSTANTS.WEEK);
+        return t('time_ago.weeks_ago', { count: weeks });
+      } else {
+        const months = Math.floor(diffInSeconds / TIME_CONSTANTS.MONTH);
+        return t('time_ago.months_ago', { count: months });
+      }
+    },
+    [t]
+  );
 
   /**
    * 言語を変更する
    * @param language - 変更する言語コード（'ja' または 'en'）
    */
-  const changeAppLanguage = async (language: string): Promise<void> => {
+  const changeAppLanguage = useCallback(async (language: string): Promise<void> => {
     await changeLanguage(language);
-  };
+  }, []);
 
   /**
    * 現在の言語を取得する
    * @returns 現在の言語コード
    */
-  const currentLanguage = i18n.language;
+  const currentLanguage = useMemo(() => i18n.language, [i18n.language]);
 
   /**
    * 現在の言語が日本語かどうかを判定する
    * @returns 日本語の場合true
    */
-  const isJapanese = currentLanguage === 'ja';
+  const isJapanese = useMemo(() => currentLanguage === 'ja', [currentLanguage]);
 
   /**
    * 現在の言語が英語かどうかを判定する
    * @returns 英語の場合true
    */
-  const isEnglish = currentLanguage === 'en';
+  const isEnglish = useMemo(() => currentLanguage === 'en', [currentLanguage]);
 
   return {
     t,

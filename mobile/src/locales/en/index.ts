@@ -143,6 +143,7 @@ export default {
     title: 'Settings',
     language: 'Language',
     language_description: 'Select app display language',
+    language_change_immediate: 'The language will be changed immediately',
     notifications: 'Notifications',
     notifications_description: 'Manage notification settings',
     profile: 'Profile',
@@ -208,6 +209,7 @@ export default {
     timeout_error_description: 'This is taking too long',
     offline: 'Offline',
     offline_description: 'Not connected to the internet',
+    language_change_failed: 'Failed to change language: {{error}}',
   },
 
   // Relative time
