@@ -28,11 +28,31 @@ import {
 } from './OfflineSyncQueueHandler';
 import { SyncQueueItem } from '@/core/domain/entities/SyncQueue';
 
-// モチE��
+// モック
 jest.mock('@react-native-async-storage/async-storage');
 jest.mock('@react-native-community/netinfo');
-jest.mock('expo-background-fetch');
-jest.mock('expo-task-manager');
+jest.mock('expo-background-fetch', () => ({
+  BackgroundFetchStatus: {
+    Restricted: 1,
+    Denied: 2,
+    Available: 3,
+  },
+  BackgroundFetchResult: {
+    NoData: 1,
+    NewData: 2,
+    Failed: 3,
+  },
+  getStatusAsync: jest.fn().mockResolvedValue(3), // Available
+  setMinimumIntervalAsync: jest.fn().mockResolvedValue(undefined),
+  registerTaskAsync: jest.fn().mockResolvedValue(undefined),
+  unregisterTaskAsync: jest.fn().mockResolvedValue(undefined),
+}));
+jest.mock('expo-task-manager', () => ({
+  defineTask: jest.fn(),
+  isTaskRegisteredAsync: jest.fn().mockResolvedValue(false),
+  unregisterTaskAsync: jest.fn().mockResolvedValue(undefined),
+  getRegisteredTasksAsync: jest.fn().mockResolvedValue([]),
+}));
 jest.mock('./SyncManager');
 
 describe('BackgroundSyncManager', () => {
