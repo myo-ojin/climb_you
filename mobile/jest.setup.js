@@ -48,6 +48,52 @@ jest.mock('expo-battery', () => ({
   addBatteryStateListener: jest.fn().mockReturnValue({ remove: jest.fn() }),
 }));
 
+jest.mock('expo-crypto', () => ({
+  getRandomBytes: jest.fn((length) => {
+    const bytes = new Uint8Array(length);
+    for (let i = 0; i < length; i++) {
+      bytes[i] = Math.floor(Math.random() * 256);
+    }
+    return bytes;
+  }),
+  digestStringAsync: jest.fn((algorithm, data, options) => {
+    // Simple mock hash generation
+    return Promise.resolve('mocked-hash-' + data.substring(0, 10));
+  }),
+  CryptoDigestAlgorithm: {
+    SHA256: 'SHA-256',
+    SHA384: 'SHA-384',
+    SHA512: 'SHA-512',
+    MD5: 'MD5',
+    SHA1: 'SHA-1',
+  },
+  CryptoEncoding: {
+    HEX: 'hex',
+    BASE64: 'base64',
+  },
+}));
+
+jest.mock('expo-secure-store', () => ({
+  setItemAsync: jest.fn(),
+  getItemAsync: jest.fn(),
+  deleteItemAsync: jest.fn(),
+  WHEN_UNLOCKED: 0,
+  AFTER_FIRST_UNLOCK: 1,
+  ALWAYS: 2,
+  WHEN_PASSCODE_SET_THIS_DEVICE_ONLY: 3,
+  WHEN_UNLOCKED_THIS_DEVICE_ONLY: 4,
+}));
+
+jest.mock('@react-native-community/netinfo', () => ({
+  fetch: jest.fn().mockResolvedValue({
+    isConnected: true,
+    isInternetReachable: true,
+    type: 'wifi',
+  }),
+  addEventListener: jest.fn().mockReturnValue(() => {}),
+  configure: jest.fn(),
+}));
+
 // グローバルな console.error と console.warn を抑制（ノイズ削減）
 const originalError = console.error;
 const originalWarn = console.warn;

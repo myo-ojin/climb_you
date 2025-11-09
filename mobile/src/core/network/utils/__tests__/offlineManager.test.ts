@@ -69,7 +69,7 @@ describe('OfflineManager - Basic Tests', () => {
       const manager = new OfflineManager();
       await manager.initialize();
 
-      expect(manager.isOnline()).toBe(true);
+      expect(await manager.isOnline()).toBe(true);
     });
 
     it('オフライン時にfalseを返すこと', async () => {
@@ -82,7 +82,7 @@ describe('OfflineManager - Basic Tests', () => {
       const manager = new OfflineManager();
       await manager.initialize();
 
-      expect(manager.isOnline()).toBe(false);
+      expect(await manager.isOnline()).toBe(false);
     });
   });
 });

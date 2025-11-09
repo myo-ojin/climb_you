@@ -335,7 +335,7 @@ describe('OfflineSyncQueueManager', () => {
       expect(manager.getQueueSize()).toBe(0);
     });
 
-    it('存在しなぁE��イチE��を削除しよぁE��しても例外�E発生しなぁE, async () => {
+    it('存在しないアイテムを削除しようとしても例外が発生しない', async () => {
       jest.mocked(AsyncStorage.setItem).mockResolvedValue();
 
       await expect(manager.removeQueuedItem('nonexistent')).resolves.not.toThrow();
