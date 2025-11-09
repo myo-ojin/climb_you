@@ -3,7 +3,6 @@
  * テスト対象: MCP（Model Context Protocol）クライアント
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import axios from 'axios';
 import { MCPClient, NetworkError } from '../MCPClient';
 import { SecureTokenStore } from '@/services/auth';
@@ -15,8 +14,8 @@ import {
 } from '../types';
 
 // Mock dependencies
-vi.mock('axios');
-vi.mock('@/services/auth');
+jest.mock('axios');
+jest.mock('@/services/auth');
 
 describe('MCPClient', () => {
   let client: MCPClient;
@@ -24,7 +23,7 @@ describe('MCPClient', () => {
   let mockAxiosInstance: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
 
     config = {
       baseURL: 'https://api.example.com/mcp',
@@ -35,14 +34,14 @@ describe('MCPClient', () => {
 
     // Mock axios.create
     mockAxiosInstance = {
-      post: vi.fn(),
+      post: jest.fn(),
       interceptors: {
-        request: { use: vi.fn() },
-        response: { use: vi.fn() },
+        request: { use: jest.fn() },
+        response: { use: jest.fn() },
       },
     };
 
-    vi.mocked(axios.create).mockReturnValue(mockAxiosInstance);
+    jest.mocked(axios.create).mockReturnValue(mockAxiosInstance);
 
     // Axios interceptor setup
     mockAxiosInstance.interceptors.request.use.mockImplementation(
@@ -52,7 +51,7 @@ describe('MCPClient', () => {
       (onFulfilled: any, onRejected: any) => ({ onFulfilled, onRejected })
     );
 
-    vi.mocked(SecureTokenStore.getToken).mockResolvedValue({
+    jest.mocked(SecureTokenStore.getToken).mockResolvedValue({
       accessToken: 'test_token_123',
       refreshToken: 'refresh_token',
       expiresAt: Date.now() + 3600000,

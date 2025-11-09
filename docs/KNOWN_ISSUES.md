@@ -9,8 +9,8 @@
 
 | ID | Title | Category | Priority | Status | Est. Time |
 |----|-------|----------|----------|--------|-----------|
-| TEST-001 | テストフレームワークの不一致 | Testing | 🟡 Medium | 🔴 Open | 15〜20分 |
-| TEST-002 | 空のモジュールエクスポート | Testing | 🟢 Low | 🟡 Open | 5分 |
+| TEST-001 | テストフレームワークの不一致 | Testing | 🟡 Medium | ✅ Resolved | - |
+| TEST-002 | 空のモジュールエクスポート | Testing | 🟢 Low | ✅ Resolved | - |
 | ARCH-001 | Repository Pattern実装 | Architecture | 🔴 High | ✅ Resolved | - |
 | ARCH-002 | React Native SQLiteスキーマ | Architecture | 🔴 High | 🟡 Pending | 1〜2時間 |
 | SYNC-001 | RemoteDataSource未実装 | Sync | 🔴 Critical | ✅ Resolved | - |
@@ -30,12 +30,12 @@
 
 # 🧪 Testing Issues
 
-## 🔴 TEST-001: Test Framework Mismatch (Vitest vs Jest)
+## ✅ TEST-001: Test Framework Mismatch (Vitest vs Jest)
 
-**Priority**: 🟡 Medium  
-**Status**: 🔴 Open  
-**Impact**: Testing, CI/CD  
-**Estimated Time**: 15〜20分
+**Priority**: 🟡 Medium
+**Status**: ✅ Resolved (2025-11-08)
+**Impact**: Testing, CI/CD
+**Resolution Time**: 15分
 
 ### 問題の概要
 
@@ -107,14 +107,49 @@ const vi = jest;
 - ✅ 追加の依存関係不要
 - ✅ 修正が簡単
 
+### 解決内容
+
+**実装完了:**
+
+12ファイルのVitestインポートをJestに変更しました（KNOWN_ISSUESでは13ファイルと記載されていましたが、実際は12ファイルでした）。
+
+**修正したファイル:**
+1. ✅ `src/services/auth/__tests__/SecureTokenStore.test.ts`
+2. ✅ `src/services/auth/__tests__/BiometricAuth.test.ts`
+3. ✅ `src/features/quest/services/EvidenceUploadService.test.ts`
+4. ✅ `src/features/quest/components/EvidenceUploadModal.test.tsx`
+5. ✅ `src/features/onboarding/__tests__/onboarding.test.ts`
+6. ✅ `src/features/goals/__tests__/goals.test.ts`
+7. ✅ `src/features/auth/__tests__/SignUpScreen.test.tsx`
+8. ✅ `src/core/network/utils/__tests__/errorHandling.test.ts`
+9. ✅ `src/core/network/mcp/__tests__/MCPClient.test.ts`
+10. ✅ `src/core/network/interceptors/__tests__/interceptors.test.ts`
+11. ✅ `src/core/network/__tests__/networkIntegration.test.ts`
+12. ✅ `src/core/network/__tests__/networkE2E.test.ts`
+
+**修正内容:**
+- ❌ 削除: `import { describe, it, expect, beforeEach, vi } from 'vitest';`
+- ✅ 追加: Jestはグローバルで`describe`, `it`, `expect`, `beforeEach`を提供
+- ✅ 置換: すべての `vi.` → `jest.`（`vi.mock`, `vi.mocked`, `vi.clearAllMocks` 等）
+
+**結果:**
+- ✅ テストスイートがJestで実行可能
+- ✅ Vitestへの依存がなくなった
+- ✅ 既存のJest設定（`jest.config.js`）で動作
+
+**修正後のメリット:**
+- ✅ テストフレームワークの統一
+- ✅ CI/CDパイプラインの安定化
+- ✅ 開発体験の向上
+
 ---
 
-## 🟡 TEST-002: Empty Module Index Files
+## ✅ TEST-002: Empty Module Index Files
 
-**Priority**: 🟢 Low  
-**Status**: 🟡 Open  
-**Impact**: Type Checking  
-**Estimated Time**: 5分
+**Priority**: 🟢 Low
+**Status**: ✅ Resolved (2025-11-08)
+**Impact**: Type Checking
+**Resolution Time**: 0分（既に解決済み）
 
 ### 問題の概要
 
@@ -189,6 +224,34 @@ rm src/shared/theme/index.ts
 - ✅ 型エラーが解消
 - ✅ 混乱を防ぐ
 - ✅ 実装時に再作成すればよい
+
+### 解決内容
+
+**確認結果:**
+
+KNOWN_ISSUESに記載されていた13ファイルのうち：
+
+**既に存在しないファイル（9ファイル）:**
+- ✅ `src/features/progress/index.ts` - 削除済み
+- ✅ `src/features/quest/index.ts` - 削除済み
+- ✅ `src/features/ranking/index.ts` - 削除済み
+- ✅ `src/features/settings/index.ts` - 削除済み
+- ✅ `src/services/health/index.ts` - 削除済み
+- ✅ `src/services/analytics/index.ts` - 削除済み
+- ✅ `src/services/crashlytics/index.ts` - 削除済み
+- ✅ `src/shared/constants/index.ts` - 削除済み
+- ✅ `src/shared/types/index.ts` - 削除済み
+
+**実装済みのファイル（4ファイル）:**
+- ✅ `src/services/notification/index.ts` - 24行、実装済み
+- ✅ `src/shared/components/index.ts` - 25行、CachedImageをエクスポート
+- ✅ `src/shared/hooks/index.ts` - 45行、usePagination等をエクスポート
+- ✅ `src/shared/theme/index.ts` - 4行、colors等をエクスポート
+
+**結論:**
+- 空のindex.tsファイルは存在しない
+- すべて削除済みまたは実装済み
+- 型エラーは既に解消されている
 
 ---
 

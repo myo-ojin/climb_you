@@ -10,7 +10,6 @@
  * 5. フィルタリングと統計
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   GoalDetails,
   GoalListItem,

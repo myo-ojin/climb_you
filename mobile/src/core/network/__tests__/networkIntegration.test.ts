@@ -3,7 +3,6 @@
  * テスト対象: MCPClient + Interceptors + Error Handling の統合
  */
 
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import axios, { AxiosInstance } from 'axios';
 import { MCPClient } from '@/core/network/mcp';
 import {
@@ -23,9 +22,9 @@ import { OAuth2Client } from '@/core/network/oauth';
 import { SecureTokenStore } from '@/services/auth';
 
 // Mock dependencies
-vi.mock('@/services/auth');
-vi.mock('@/core/network/oauth');
-vi.mock('axios');
+jest.mock('@/services/auth');
+jest.mock('@/core/network/oauth');
+jest.mock('axios');
 
 describe('Network Layer Integration', () => {
   let axiosInstance: AxiosInstance;
@@ -35,19 +34,19 @@ describe('Network Layer Integration', () => {
   let mockAxiosInstance: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
 
     // Axios mock setup
     mockAxiosInstance = {
-      post: vi.fn(),
-      get: vi.fn(),
+      post: jest.fn(),
+      get: jest.fn(),
       interceptors: {
-        request: { use: vi.fn() },
-        response: { use: vi.fn() },
+        request: { use: jest.fn() },
+        response: { use: jest.fn() },
       },
     };
 
-    vi.mocked(axios.create).mockReturnValue(mockAxiosInstance);
+    jest.mocked(axios.create).mockReturnValue(mockAxiosInstance);
 
     mockAxiosInstance.interceptors.request.use.mockImplementation(
       (onFulfilled: any) => onFulfilled
@@ -83,7 +82,7 @@ describe('Network Layer Integration', () => {
     });
 
     // Setup token mock
-    vi.mocked(SecureTokenStore.getToken).mockResolvedValue({
+    jest.mocked(SecureTokenStore.getToken).mockResolvedValue({
       accessToken: 'test_token',
       refreshToken: 'refresh_token',
       expiresAt: Date.now() + 3600000,
@@ -94,7 +93,7 @@ describe('Network Layer Integration', () => {
 
   describe('MCPClient + Error Handling', () => {
     it('should handle 401 error and trigger refresh', async () => {
-      const onUnauthorized = vi.fn();
+      const onUnauthorized = jest.fn();
 
       const handler = new NetworkErrorHandler({
         maxRetries: 3,
@@ -280,7 +279,7 @@ describe('Network Layer Integration', () => {
 
   describe('Error Recovery Workflow', () => {
     it('should handle complete error recovery flow', async () => {
-      const onUnauthorized = vi.fn();
+      const onUnauthorized = jest.fn();
       const handler = new NetworkErrorHandler({
         maxRetries: 3,
         initialRetryDelay: 50,
@@ -393,7 +392,7 @@ describe('Network Layer Integration', () => {
 
   describe('Performance and Stress Tests', () => {
     it('should handle rapid sequential requests', async () => {
-      const fn = vi.fn().mockResolvedValue('success');
+      const fn = jest.fn().mockResolvedValue('success');
 
       const results = await Promise.all([
         retryStrategy.execute(() => fn()),

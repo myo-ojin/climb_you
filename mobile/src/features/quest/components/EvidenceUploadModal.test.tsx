@@ -5,20 +5,19 @@
 
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react-native';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { EvidenceUploadModal } from './EvidenceUploadModal';
 
 // Mock image picker
-vi.mock('react-native-image-picker', () => ({
-  launchImageLibrary: vi.fn(),
-  launchCamera: vi.fn(),
+jest.mock('react-native-image-picker', () => ({
+  launchImageLibrary: jest.fn(),
+  launchCamera: jest.fn(),
 }));
 
 // Mock document picker
-vi.mock('react-native-document-picker', () => ({
+jest.mock('react-native-document-picker', () => ({
   default: {
-    pick: vi.fn(),
-    isCancel: vi.fn(() => false),
+    pick: jest.fn(),
+    isCancel: jest.fn(() => false),
     types: {
       pdf: 'com.adobe.pdf',
       doc: 'com.microsoft.word.doc',
@@ -31,11 +30,11 @@ vi.mock('react-native-document-picker', () => ({
 }));
 
 describe('EvidenceUploadModal', () => {
-  const mockOnClose = vi.fn();
-  const mockOnUpload = vi.fn();
+  const mockOnClose = jest.fn();
+  const mockOnUpload = jest.fn();
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('Image evidence type', () => {

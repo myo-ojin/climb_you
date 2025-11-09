@@ -3,7 +3,6 @@
  * テスト対象: MCPClient フルフロー（オンボーディングからクエスト完了まで）
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { MCPClient } from '@/core/network/mcp';
 import {
   NetworkErrorHandler,
@@ -14,8 +13,8 @@ import {
 } from '@/core/network/utils';
 import { SecureTokenStore } from '@/services/auth';
 
-vi.mock('@/services/auth');
-vi.mock('@react-native-community/netinfo');
+jest.mock('@/services/auth');
+jest.mock('@react-native-community/netinfo');
 
 describe('Network Layer E2E Tests', () => {
   let mcpClient: MCPClient;
@@ -23,7 +22,7 @@ describe('Network Layer E2E Tests', () => {
   let retryStrategy: RetryStrategy;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
 
     mcpClient = new MCPClient({
       baseURL: 'https://api.example.com/mcp',
@@ -46,7 +45,7 @@ describe('Network Layer E2E Tests', () => {
       maxDelay: 500,
     });
 
-    vi.mocked(SecureTokenStore.getToken).mockResolvedValue({
+    jest.mocked(SecureTokenStore.getToken).mockResolvedValue({
       accessToken: 'test_token',
       refreshToken: 'refresh_token',
       expiresAt: Date.now() + 3600000,

@@ -3,7 +3,6 @@
  * ファイルバリデーション、形式チェック、ファイルサイズ処理のテスト
  */
 
-import { describe, it, expect } from 'vitest';
 import { EvidenceUploadService, EvidenceUploadResult } from './EvidenceUploadService';
 
 describe('EvidenceUploadService', () => {

@@ -3,13 +3,12 @@
  * テスト対象: セキュアストレージでのトークン管理（暗号化、ローテーション、有効期限管理）
  */
 
-import { describe, it, expect, beforeEach, vi, MockedFunction } from 'vitest';
 import * as SecureStore from 'expo-secure-store';
 import { SecureTokenStore, SecureToken } from '../SecureTokenStore';
 import { AuthToken } from '@/core/domain/entities';
 
 // Mock expo-secure-store
-vi.mock('expo-secure-store');
+jest.mock('expo-secure-store');
 
 describe('SecureTokenStore', () => {
   const mockAuthToken: AuthToken = {
@@ -31,13 +30,13 @@ describe('SecureTokenStore', () => {
   };
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('storeToken', () => {
     it('should store token securely', async () => {
-      vi.mocked(SecureStore.setItemAsync).mockResolvedValue(undefined);
-      vi.mocked(SecureStore.getItemAsync).mockResolvedValue(null);
+      jest.mocked(SecureStore.setItemAsync).mockResolvedValue(undefined);
+      jest.mocked(SecureStore.getItemAsync).mockResolvedValue(null);
 
       await SecureTokenStore.storeToken(mockAuthToken);
 
@@ -48,24 +47,24 @@ describe('SecureTokenStore', () => {
     });
 
     it('should record token rotation', async () => {
-      vi.mocked(SecureStore.setItemAsync).mockResolvedValue(undefined);
-      vi.mocked(SecureStore.getItemAsync).mockResolvedValue(null);
+      jest.mocked(SecureStore.setItemAsync).mockResolvedValue(undefined);
+      jest.mocked(SecureStore.getItemAsync).mockResolvedValue(null);
 
       await SecureTokenStore.storeToken(mockAuthToken);
 
-      const calls = vi.mocked(SecureStore.setItemAsync).mock.calls;
+      const calls = jest.mocked(SecureStore.setItemAsync).mock.calls;
       expect(calls.length).toBeGreaterThan(1);
     });
 
     it('should throw error on storage failure', async () => {
-      vi.mocked(SecureStore.setItemAsync).mockRejectedValue(new Error('Storage failed'));
+      jest.mocked(SecureStore.setItemAsync).mockRejectedValue(new Error('Storage failed'));
 
       await expect(SecureTokenStore.storeToken(mockAuthToken)).rejects.toThrow('Storage failed');
     });
 
     it('should handle missing refresh token', async () => {
-      vi.mocked(SecureStore.setItemAsync).mockResolvedValue(undefined);
-      vi.mocked(SecureStore.getItemAsync).mockResolvedValue(null);
+      jest.mocked(SecureStore.setItemAsync).mockResolvedValue(undefined);
+      jest.mocked(SecureStore.getItemAsync).mockResolvedValue(null);
 
       const tokenWithoutRefresh: AuthToken = {
         ...mockAuthToken,
@@ -81,7 +80,7 @@ describe('SecureTokenStore', () => {
   describe('getToken', () => {
     it('should retrieve stored token', async () => {
       const storedToken = JSON.stringify(mockSecureToken);
-      vi.mocked(SecureStore.getItemAsync).mockResolvedValue(storedToken);
+      jest.mocked(SecureStore.getItemAsync).mockResolvedValue(storedToken);
 
       const result = await SecureTokenStore.getToken();
 
@@ -92,7 +91,7 @@ describe('SecureTokenStore', () => {
     });
 
     it('should return null when no token stored', async () => {
-      vi.mocked(SecureStore.getItemAsync).mockResolvedValue(null);
+      jest.mocked(SecureStore.getItemAsync).mockResolvedValue(null);
 
       const result = await SecureTokenStore.getToken();
 
@@ -100,7 +99,7 @@ describe('SecureTokenStore', () => {
     });
 
     it('should handle corrupted token data', async () => {
-      vi.mocked(SecureStore.getItemAsync).mockResolvedValue('invalid json');
+      jest.mocked(SecureStore.getItemAsync).mockResolvedValue('invalid json');
 
       const result = await SecureTokenStore.getToken();
 
@@ -108,7 +107,7 @@ describe('SecureTokenStore', () => {
     });
 
     it('should return null on retrieval error', async () => {
-      vi.mocked(SecureStore.getItemAsync).mockRejectedValue(new Error('Retrieval failed'));
+      jest.mocked(SecureStore.getItemAsync).mockRejectedValue(new Error('Retrieval failed'));
 
       const result = await SecureTokenStore.getToken();
 
@@ -122,7 +121,7 @@ describe('SecureTokenStore', () => {
         ...mockSecureToken,
         expiresAt: Date.now() + 120000, // 2 minutes from now
       };
-      vi.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify(futureToken));
+      jest.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify(futureToken));
 
       const result = await SecureTokenStore.isTokenValid();
 
@@ -134,7 +133,7 @@ describe('SecureTokenStore', () => {
         ...mockSecureToken,
         expiresAt: Date.now() - 1000, // 1 second ago
       };
-      vi.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify(expiredToken));
+      jest.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify(expiredToken));
 
       const result = await SecureTokenStore.isTokenValid();
 
@@ -146,7 +145,7 @@ describe('SecureTokenStore', () => {
         ...mockSecureToken,
         expiresAt: Date.now() + 30000, // 30 seconds from now
       };
-      vi.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify(expiringToken));
+      jest.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify(expiringToken));
 
       const result = await SecureTokenStore.isTokenValid();
 
@@ -154,7 +153,7 @@ describe('SecureTokenStore', () => {
     });
 
     it('should return false when no token', async () => {
-      vi.mocked(SecureStore.getItemAsync).mockResolvedValue(null);
+      jest.mocked(SecureStore.getItemAsync).mockResolvedValue(null);
 
       const result = await SecureTokenStore.isTokenValid();
 
@@ -162,7 +161,7 @@ describe('SecureTokenStore', () => {
     });
 
     it('should return false on error', async () => {
-      vi.mocked(SecureStore.getItemAsync).mockRejectedValue(new Error('Check failed'));
+      jest.mocked(SecureStore.getItemAsync).mockRejectedValue(new Error('Check failed'));
 
       const result = await SecureTokenStore.isTokenValid();
 
@@ -176,7 +175,7 @@ describe('SecureTokenStore', () => {
         ...mockSecureToken,
         expiresAt: Date.now() + 180000, // 3 minutes from now
       };
-      vi.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify(expiringToken));
+      jest.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify(expiringToken));
 
       const result = await SecureTokenStore.isTokenExpiringSoon(5); // 5 minute threshold
 
@@ -188,7 +187,7 @@ describe('SecureTokenStore', () => {
         ...mockSecureToken,
         expiresAt: Date.now() + 600000, // 10 minutes from now
       };
-      vi.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify(validToken));
+      jest.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify(validToken));
 
       const result = await SecureTokenStore.isTokenExpiringSoon(5); // 5 minute threshold
 
@@ -200,7 +199,7 @@ describe('SecureTokenStore', () => {
         ...mockSecureToken,
         expiresAt: Date.now() + 240000, // 4 minutes from now
       };
-      vi.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify(expiringToken));
+      jest.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify(expiringToken));
 
       const result = await SecureTokenStore.isTokenExpiringSoon();
 
@@ -208,7 +207,7 @@ describe('SecureTokenStore', () => {
     });
 
     it('should return true when no token', async () => {
-      vi.mocked(SecureStore.getItemAsync).mockResolvedValue(null);
+      jest.mocked(SecureStore.getItemAsync).mockResolvedValue(null);
 
       const result = await SecureTokenStore.isTokenExpiringSoon();
 
@@ -216,7 +215,7 @@ describe('SecureTokenStore', () => {
     });
 
     it('should return true on error', async () => {
-      vi.mocked(SecureStore.getItemAsync).mockRejectedValue(new Error('Check failed'));
+      jest.mocked(SecureStore.getItemAsync).mockRejectedValue(new Error('Check failed'));
 
       const result = await SecureTokenStore.isTokenExpiringSoon();
 
@@ -231,7 +230,7 @@ describe('SecureTokenStore', () => {
         ...mockSecureToken,
         expiresAt: Date.now() + remainingMs,
       };
-      vi.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify(token));
+      jest.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify(token));
 
       const result = await SecureTokenStore.getTokenRemainingTime();
 
@@ -244,7 +243,7 @@ describe('SecureTokenStore', () => {
         ...mockSecureToken,
         expiresAt: Date.now() - 1000,
       };
-      vi.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify(token));
+      jest.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify(token));
 
       const result = await SecureTokenStore.getTokenRemainingTime();
 
@@ -252,7 +251,7 @@ describe('SecureTokenStore', () => {
     });
 
     it('should return 0 when no token', async () => {
-      vi.mocked(SecureStore.getItemAsync).mockResolvedValue(null);
+      jest.mocked(SecureStore.getItemAsync).mockResolvedValue(null);
 
       const result = await SecureTokenStore.getTokenRemainingTime();
 
@@ -260,7 +259,7 @@ describe('SecureTokenStore', () => {
     });
 
     it('should return 0 on error', async () => {
-      vi.mocked(SecureStore.getItemAsync).mockRejectedValue(new Error('Failed'));
+      jest.mocked(SecureStore.getItemAsync).mockRejectedValue(new Error('Failed'));
 
       const result = await SecureTokenStore.getTokenRemainingTime();
 
@@ -270,7 +269,7 @@ describe('SecureTokenStore', () => {
 
   describe('deleteToken', () => {
     it('should delete token securely', async () => {
-      vi.mocked(SecureStore.deleteItemAsync).mockResolvedValue(undefined);
+      jest.mocked(SecureStore.deleteItemAsync).mockResolvedValue(undefined);
 
       await SecureTokenStore.deleteToken();
 
@@ -280,7 +279,7 @@ describe('SecureTokenStore', () => {
     });
 
     it('should throw error on deletion failure', async () => {
-      vi.mocked(SecureStore.deleteItemAsync).mockRejectedValue(new Error('Deletion failed'));
+      jest.mocked(SecureStore.deleteItemAsync).mockRejectedValue(new Error('Deletion failed'));
 
       await expect(SecureTokenStore.deleteToken()).rejects.toThrow('Deletion failed');
     });
@@ -288,7 +287,7 @@ describe('SecureTokenStore', () => {
 
   describe('clearAllSecureData', () => {
     it('should delete all secure data', async () => {
-      vi.mocked(SecureStore.deleteItemAsync).mockResolvedValue(undefined);
+      jest.mocked(SecureStore.deleteItemAsync).mockResolvedValue(undefined);
 
       await SecureTokenStore.clearAllSecureData();
 
@@ -296,7 +295,7 @@ describe('SecureTokenStore', () => {
     });
 
     it('should throw error on any deletion failure', async () => {
-      vi.mocked(SecureStore.deleteItemAsync)
+      jest.mocked(SecureStore.deleteItemAsync)
         .mockResolvedValueOnce(undefined)
         .mockRejectedValueOnce(new Error('Deletion failed'));
 
@@ -306,12 +305,12 @@ describe('SecureTokenStore', () => {
 
   describe('recordTokenRotation', () => {
     it('should record token rotation', async () => {
-      vi.mocked(SecureStore.setItemAsync).mockResolvedValue(undefined);
-      vi.mocked(SecureStore.getItemAsync).mockResolvedValue(null);
+      jest.mocked(SecureStore.setItemAsync).mockResolvedValue(undefined);
+      jest.mocked(SecureStore.getItemAsync).mockResolvedValue(null);
 
       await SecureTokenStore.storeToken(mockAuthToken);
 
-      const setCalls = vi.mocked(SecureStore.setItemAsync).mock.calls;
+      const setCalls = jest.mocked(SecureStore.setItemAsync).mock.calls;
       const historyCall = setCalls.find((call) => call[0].includes('history'));
       expect(historyCall).toBeDefined();
     });
@@ -324,12 +323,12 @@ describe('SecureTokenStore', () => {
       }));
 
       const historyJson = JSON.stringify(records);
-      vi.mocked(SecureStore.getItemAsync).mockResolvedValue(historyJson);
-      vi.mocked(SecureStore.setItemAsync).mockResolvedValue(undefined);
+      jest.mocked(SecureStore.getItemAsync).mockResolvedValue(historyJson);
+      jest.mocked(SecureStore.setItemAsync).mockResolvedValue(undefined);
 
       await SecureTokenStore.storeToken(mockAuthToken);
 
-      const setCalls = vi.mocked(SecureStore.setItemAsync).mock.calls;
+      const setCalls = jest.mocked(SecureStore.setItemAsync).mock.calls;
       const historyCalls = setCalls.filter((call) => call[0].includes('history'));
 
       historyCalls.forEach((call) => {
@@ -341,7 +340,7 @@ describe('SecureTokenStore', () => {
     });
 
     it('should handle rotation record error gracefully', async () => {
-      vi.mocked(SecureStore.setItemAsync)
+      jest.mocked(SecureStore.setItemAsync)
         .mockResolvedValueOnce(undefined)
         .mockRejectedValueOnce(new Error('History failed'));
 
@@ -362,7 +361,7 @@ describe('SecureTokenStore', () => {
         },
       ];
 
-      vi.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify(history));
+      jest.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify(history));
 
       const result = await SecureTokenStore.getTokenHistory();
 
@@ -370,7 +369,7 @@ describe('SecureTokenStore', () => {
     });
 
     it('should return empty array when no history', async () => {
-      vi.mocked(SecureStore.getItemAsync).mockResolvedValue(null);
+      jest.mocked(SecureStore.getItemAsync).mockResolvedValue(null);
 
       const result = await SecureTokenStore.getTokenHistory();
 
@@ -378,7 +377,7 @@ describe('SecureTokenStore', () => {
     });
 
     it('should return empty array on error', async () => {
-      vi.mocked(SecureStore.getItemAsync).mockRejectedValue(new Error('Failed'));
+      jest.mocked(SecureStore.getItemAsync).mockRejectedValue(new Error('Failed'));
 
       const result = await SecureTokenStore.getTokenHistory();
 
@@ -394,12 +393,12 @@ describe('SecureTokenStore', () => {
         { timestamp: now - 3 * 24 * 60 * 60 * 1000, tokenHash: 'recent', expiresAt: now },
       ];
 
-      vi.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify(history));
-      vi.mocked(SecureStore.setItemAsync).mockResolvedValue(undefined);
+      jest.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify(history));
+      jest.mocked(SecureStore.setItemAsync).mockResolvedValue(undefined);
 
       await SecureTokenStore.clearOldTokenHistory(7);
 
-      const setCalls = vi.mocked(SecureStore.setItemAsync).mock.calls;
+      const setCalls = jest.mocked(SecureStore.setItemAsync).mock.calls;
       const historyCalls = setCalls.filter((call) => call[0].includes('history'));
 
       if (historyCalls.length > 0 && historyCalls[0][1]) {
@@ -413,18 +412,18 @@ describe('SecureTokenStore', () => {
       const now = Date.now();
       const history = [{ timestamp: now - 1 * 24 * 60 * 60 * 1000, tokenHash: 'recent', expiresAt: now }];
 
-      vi.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify(history));
-      vi.mocked(SecureStore.setItemAsync).mockResolvedValue(undefined);
+      jest.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify(history));
+      jest.mocked(SecureStore.setItemAsync).mockResolvedValue(undefined);
 
       await SecureTokenStore.clearOldTokenHistory(7);
 
-      const setCalls = vi.mocked(SecureStore.setItemAsync).mock.calls;
+      const setCalls = jest.mocked(SecureStore.setItemAsync).mock.calls;
       // Should be called for token storage, but not for history update
       expect(setCalls.length).toBeGreaterThanOrEqual(0);
     });
 
     it('should handle error gracefully', async () => {
-      vi.mocked(SecureStore.getItemAsync).mockRejectedValue(new Error('Failed'));
+      jest.mocked(SecureStore.getItemAsync).mockRejectedValue(new Error('Failed'));
 
       await SecureTokenStore.clearOldTokenHistory(7);
 
@@ -441,7 +440,7 @@ describe('SecureTokenStore', () => {
         { timestamp: now - 1000, tokenHash: 'recent', expiresAt: now },
       ];
 
-      vi.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify(history));
+      jest.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify(history));
 
       const result = await SecureTokenStore.getLastRotationTime();
 
@@ -449,7 +448,7 @@ describe('SecureTokenStore', () => {
     });
 
     it('should return null when no history', async () => {
-      vi.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify([]));
+      jest.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify([]));
 
       const result = await SecureTokenStore.getLastRotationTime();
 
@@ -457,7 +456,7 @@ describe('SecureTokenStore', () => {
     });
 
     it('should return null on error', async () => {
-      vi.mocked(SecureStore.getItemAsync).mockRejectedValue(new Error('Failed'));
+      jest.mocked(SecureStore.getItemAsync).mockRejectedValue(new Error('Failed'));
 
       const result = await SecureTokenStore.getLastRotationTime();
 
@@ -470,7 +469,7 @@ describe('SecureTokenStore', () => {
       const oldRotation = Date.now() - 25 * 60 * 60 * 1000; // 25 hours ago
       const history = [{ timestamp: oldRotation, tokenHash: 'old', expiresAt: Date.now() }];
 
-      vi.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify(history));
+      jest.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify(history));
 
       const result = await SecureTokenStore.needsRotation(24);
 
@@ -481,7 +480,7 @@ describe('SecureTokenStore', () => {
       const recentRotation = Date.now() - 12 * 60 * 60 * 1000; // 12 hours ago
       const history = [{ timestamp: recentRotation, tokenHash: 'recent', expiresAt: Date.now() }];
 
-      vi.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify(history));
+      jest.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify(history));
 
       const result = await SecureTokenStore.needsRotation(24);
 
@@ -489,7 +488,7 @@ describe('SecureTokenStore', () => {
     });
 
     it('should return true when no rotation history', async () => {
-      vi.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify([]));
+      jest.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify([]));
 
       const result = await SecureTokenStore.needsRotation(24);
 
@@ -497,7 +496,7 @@ describe('SecureTokenStore', () => {
     });
 
     it('should return false on error', async () => {
-      vi.mocked(SecureStore.getItemAsync).mockRejectedValue(new Error('Failed'));
+      jest.mocked(SecureStore.getItemAsync).mockRejectedValue(new Error('Failed'));
 
       const result = await SecureTokenStore.needsRotation(24);
 
@@ -508,7 +507,7 @@ describe('SecureTokenStore', () => {
       const oldRotation = Date.now() - 25 * 60 * 60 * 1000;
       const history = [{ timestamp: oldRotation, tokenHash: 'old', expiresAt: Date.now() }];
 
-      vi.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify(history));
+      jest.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify(history));
 
       const result = await SecureTokenStore.needsRotation();
 

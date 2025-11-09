@@ -5,7 +5,6 @@
 
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react-native';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
@@ -14,11 +13,11 @@ import { OAuth2Client } from '@/core/network/oauth';
 import { SecureTokenStore, BiometricAuth } from '@/services/auth';
 
 // Mock dependencies
-vi.mock('@/core/network/oauth');
-vi.mock('@/services/auth');
+jest.mock('@/core/network/oauth');
+jest.mock('@/services/auth');
 
 // Mock fetch
-global.fetch = vi.fn();
+global.fetch = jest.fn();
 
 const Stack = createNativeStackNavigator();
 
@@ -30,8 +29,8 @@ const MockNavigationWrapper = ({ children }: { children: React.ReactNode }) => (
 
 describe('SignUpScreen', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    vi.mocked(global.fetch).mockClear();
+    jest.clearAllMocks();
+    jest.mocked(global.fetch).mockClear();
   });
 
   describe('Rendering', () => {
@@ -251,12 +250,12 @@ describe('SignUpScreen', () => {
 
   describe('Login Process', () => {
     it('should handle successful login', async () => {
-      vi.mocked(OAuth2Client.prototype.startLogin).mockResolvedValue({
+      jest.mocked(OAuth2Client.prototype.startLogin).mockResolvedValue({
         code: 'auth_code_123',
         state: 'state_123',
       });
 
-      vi.mocked(OAuth2Client.prototype.exchangeCodeForToken).mockResolvedValue({
+      jest.mocked(OAuth2Client.prototype.exchangeCodeForToken).mockResolvedValue({
         accessToken: 'access_token_123',
         refreshToken: 'refresh_token_123',
         expiresIn: 3600,
@@ -264,8 +263,8 @@ describe('SignUpScreen', () => {
         issuedAt: Math.floor(Date.now() / 1000),
       });
 
-      vi.mocked(SecureTokenStore.storeToken).mockResolvedValue(undefined);
-      vi.mocked(BiometricAuth.isAvailable).mockResolvedValue(false);
+      jest.mocked(SecureTokenStore.storeToken).mockResolvedValue(undefined);
+      jest.mocked(BiometricAuth.isAvailable).mockResolvedValue(false);
 
       const { getByText, getByPlaceholderText } = render(
         <MockNavigationWrapper>
@@ -287,7 +286,7 @@ describe('SignUpScreen', () => {
     });
 
     it('should handle login error', async () => {
-      vi.mocked(OAuth2Client.prototype.startLogin).mockRejectedValue(
+      jest.mocked(OAuth2Client.prototype.startLogin).mockRejectedValue(
         new Error('Login failed')
       );
 
@@ -315,7 +314,7 @@ describe('SignUpScreen', () => {
 
   describe('SignUp Process', () => {
     it('should handle successful signup', async () => {
-      vi.mocked(global.fetch).mockResolvedValueOnce({
+      jest.mocked(global.fetch).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           accessToken: 'access_token_123',
@@ -325,8 +324,8 @@ describe('SignUpScreen', () => {
         }),
       } as Response);
 
-      vi.mocked(SecureTokenStore.storeToken).mockResolvedValue(undefined);
-      vi.mocked(BiometricAuth.isAvailable).mockResolvedValue(false);
+      jest.mocked(SecureTokenStore.storeToken).mockResolvedValue(undefined);
+      jest.mocked(BiometricAuth.isAvailable).mockResolvedValue(false);
 
       const { getByText, getByPlaceholderText } = render(
         <MockNavigationWrapper>
@@ -356,7 +355,7 @@ describe('SignUpScreen', () => {
     });
 
     it('should handle signup error from API', async () => {
-      vi.mocked(global.fetch).mockResolvedValueOnce({
+      jest.mocked(global.fetch).mockResolvedValueOnce({
         ok: false,
         json: async () => ({ message: 'Email already registered' }),
       } as Response);

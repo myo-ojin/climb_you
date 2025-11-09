@@ -3,15 +3,14 @@
  * テスト対象: Auth、Error、Logging インターセプター
  */
 
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import axios, { AxiosInstance } from 'axios';
 import { setupAuthInterceptor, setupErrorInterceptor, AppError, setupLoggingInterceptor, LogLevel } from '../index';
 import { SecureTokenStore } from '@/services/auth';
 import { OAuth2Client } from '@/core/network/oauth';
 
 // Mock dependencies
-vi.mock('@/services/auth');
-vi.mock('@/core/network/oauth');
+jest.mock('@/services/auth');
+jest.mock('@/core/network/oauth');
 
 describe('Interceptors', () => {
   let axiosInstance: AxiosInstance;
@@ -23,10 +22,10 @@ describe('Interceptors', () => {
       baseURL: 'https://api.example.com',
     });
 
-    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
-    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
+    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
 
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   afterEach(() => {
@@ -44,7 +43,7 @@ describe('Interceptors', () => {
         issuedAt: Date.now(),
       };
 
-      vi.mocked(SecureTokenStore.getToken).mockResolvedValue(mockToken);
+      jest.mocked(SecureTokenStore.getToken).mockResolvedValue(mockToken);
 
       const oauthClient = new OAuth2Client({} as any);
       setupAuthInterceptor(axiosInstance, oauthClient, {
@@ -63,7 +62,7 @@ describe('Interceptors', () => {
     });
 
     it('should exclude URLs from auth', async () => {
-      vi.mocked(SecureTokenStore.getToken).mockResolvedValue({
+      jest.mocked(SecureTokenStore.getToken).mockResolvedValue({
         accessToken: 'token',
         refreshToken: 'refresh',
         expiresAt: Date.now() + 3600000,
@@ -104,9 +103,9 @@ describe('Interceptors', () => {
         issuedAt: Date.now(),
       };
 
-      vi.mocked(SecureTokenStore.getToken).mockResolvedValue(oldToken);
+      jest.mocked(SecureTokenStore.getToken).mockResolvedValue(oldToken);
       const mockOauthClient = {
-        refreshAccessToken: vi.fn().mockResolvedValue(newToken),
+        refreshAccessToken: jest.fn().mockResolvedValue(newToken),
       };
 
       setupAuthInterceptor(axiosInstance, mockOauthClient as any, {
@@ -126,9 +125,9 @@ describe('Interceptors', () => {
     });
 
     it('should call onUnauthorized callback on token refresh failure', async () => {
-      const mockCallback = vi.fn();
+      const mockCallback = jest.fn();
 
-      vi.mocked(SecureTokenStore.getToken).mockResolvedValue({
+      jest.mocked(SecureTokenStore.getToken).mockResolvedValue({
         accessToken: 'token',
         refreshToken: 'refresh',
         expiresAt: Date.now() + 3600000,
@@ -137,7 +136,7 @@ describe('Interceptors', () => {
       });
 
       const mockOauthClient = {
-        refreshAccessToken: vi.fn().mockRejectedValue(new Error('Refresh failed')),
+        refreshAccessToken: jest.fn().mockRejectedValue(new Error('Refresh failed')),
       };
 
       setupAuthInterceptor(axiosInstance, mockOauthClient as any, {
@@ -195,7 +194,7 @@ describe('Interceptors', () => {
     });
 
     it('should handle network errors', async () => {
-      const onNetworkError = vi.fn();
+      const onNetworkError = jest.fn();
       setupErrorInterceptor(axiosInstance, { onNetworkError });
 
       const error = new Error('Network error');
@@ -242,7 +241,7 @@ describe('Interceptors', () => {
     });
 
     it('should call onError callback', async () => {
-      const onError = vi.fn();
+      const onError = jest.fn();
       setupErrorInterceptor(axiosInstance, { onError });
 
       const error = {

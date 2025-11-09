@@ -3,7 +3,6 @@
  * テスト対象: NetworkErrorHandler, OfflineManager, RetryStrategy
  */
 
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import {
   NetworkErrorHandler,
   ErrorRecoveryStrategy,
@@ -150,7 +149,7 @@ describe('Network Error Handling', () => {
     });
 
     it('should call onUnauthorized callback', async () => {
-      const onUnauthorized = vi.fn();
+      const onUnauthorized = jest.fn();
       const handler = new NetworkErrorHandler({
         maxRetries: 3,
         initialRetryDelay: 100,
@@ -282,7 +281,7 @@ describe('Network Error Handling', () => {
     });
 
     it('should execute function successfully', async () => {
-      const fn = vi.fn().mockResolvedValue('success');
+      const fn = jest.fn().mockResolvedValue('success');
 
       const result = await strategy.execute(fn);
 
@@ -309,7 +308,7 @@ describe('Network Error Handling', () => {
 
     it('should fail after max attempts', async () => {
       const error = new AppError('NETWORK_ERROR', 'Network error');
-      const fn = vi.fn().mockRejectedValue(error);
+      const fn = jest.fn().mockRejectedValue(error);
 
       const result = await strategy.execute(fn);
 
@@ -321,7 +320,7 @@ describe('Network Error Handling', () => {
 
     it('should not retry non-retryable errors', async () => {
       const error = new AppError('FORBIDDEN', 'Forbidden', 403);
-      const fn = vi.fn().mockRejectedValue(error);
+      const fn = jest.fn().mockRejectedValue(error);
 
       const result = await strategy.execute(fn);
 
@@ -346,7 +345,7 @@ describe('Network Error Handling', () => {
     });
 
     it('should clear attempts', async () => {
-      const fn = vi.fn().mockResolvedValue('success');
+      const fn = jest.fn().mockResolvedValue('success');
       await strategy.execute(fn);
 
       expect(strategy.getAttempts()).toHaveLength(1);
