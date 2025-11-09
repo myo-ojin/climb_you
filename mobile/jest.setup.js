@@ -94,6 +94,24 @@ jest.mock('@react-native-community/netinfo', () => ({
   configure: jest.fn(),
 }));
 
+jest.mock('expo-local-authentication', () => ({
+  hasHardwareAsync: jest.fn().mockResolvedValue(true),
+  isEnrolledAsync: jest.fn().mockResolvedValue(true),
+  authenticateAsync: jest.fn().mockResolvedValue({ success: true }),
+  supportedAuthenticationTypesAsync: jest.fn().mockResolvedValue([1, 2]), // FINGERPRINT, FACIAL_RECOGNITION
+  SecurityLevel: {
+    NONE: 0,
+    SECRET: 1,
+    BIOMETRIC_WEAK: 2,
+    BIOMETRIC_STRONG: 3,
+  },
+  AuthenticationType: {
+    FINGERPRINT: 1,
+    FACIAL_RECOGNITION: 2,
+    IRIS: 3,
+  },
+}));
+
 // グローバルな console.error と console.warn を抑制（ノイズ削減）
 const originalError = console.error;
 const originalWarn = console.warn;

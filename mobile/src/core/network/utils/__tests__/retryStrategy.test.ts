@@ -29,7 +29,8 @@ describe('RetryStrategy - Basic Tests', () => {
     it('固定遅延を計算すること', () => {
       const strategy = new RetryStrategy({
         strategy: RetryStrategyType.FIXED,
-        initialDelay: 2000
+        initialDelay: 2000,
+        jitterFactor: 0 // ジッターを無効化
       });
 
       const delay1 = strategy.calculateDelay(0);
