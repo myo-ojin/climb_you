@@ -1,13 +1,13 @@
 /**
  * SyncIntegration.test.ts
- * 同期機�Eの統合テスチE
+ * 同期機�Eの統合テスチE
  *
- * チE��ト対象:
+ * チE��ト対象:
  * - SyncManager と BackgroundSyncManager の統吁E
  * - SyncManager と ConflictResolver の統吁E
  * - SyncManager と OfflineDataProvider の統吁E
- * - 完�Eな同期フロー�E�オンライン・オフライン・競合解決�E�E
- * - バックグラウンド同期�E実衁E
+ * - 完�Eな同期フロー�E�オンライン・オフライン・競合解決�E�E
+ * - バックグラウンド同期�E実衁E
  * - エラーハンドリングとリトライ
  */
 
@@ -22,7 +22,7 @@ import {
   OfflineDataProvider as OfflineDataProviderClass,
 } from './OfflineDataProvider';
 
-// モチE��
+// モチE��
 jest.mock('@react-native-async-storage/async-storage');
 jest.mock('@react-native-community/netinfo');
 jest.mock('expo-background-fetch');
@@ -35,13 +35,13 @@ describe('SyncManager Integration Tests', () => {
   let offlineProvider: OfflineDataProvider;
 
   beforeEach(async () => {
-    // シングルトンをリセチE��
+    // シングルトンをリセチE��
     (SyncManager as any).instance = null;
     BackgroundSyncManager.resetInstance();
     OfflineDataProviderClass.resetInstance();
     resetConflictResolver();
 
-    // モチE��設宁E
+    // モチE��設宁E
     jest.mocked(NetInfo.fetch).mockResolvedValue({
       isConnected: true,
       isInternetReachable: true,
@@ -67,7 +67,7 @@ describe('SyncManager Integration Tests', () => {
   });
 
   describe('sync initialization', () => {
-    it('SyncManager が�E期化されめE, async () => {
+    it('SyncManager が初期化される', async () => {
       const state = syncManager.getSyncStatistics();
       expect(state.isOnline).toBe(true);
       expect(state.isSyncing).toBe(false);
@@ -103,7 +103,7 @@ describe('SyncManager Integration Tests', () => {
       expect(stats.pendingItems).toBeGreaterThan(0);
     });
 
-    it('褁E��の操作をキューイングして頁E��を保証できる', async () => {
+    it('褁E��の操作をキューイングして頁E��を保証できる', async () => {
       jest.mocked(AsyncStorage.setItem).mockResolvedValue();
 
       const id1 = await syncManager.queueOperation(
@@ -137,7 +137,7 @@ describe('SyncManager Integration Tests', () => {
 
   describe('offline sync flow', () => {
     it('オフライン時に操作をキューイングできる', async (done) => {
-      // オフラインに刁E��替ぁE
+      // オフラインに刁E��替ぁE
       jest.mocked(NetInfo.fetch).mockResolvedValueOnce({
         isConnected: false,
         isInternetReachable: false,
@@ -157,7 +157,7 @@ describe('SyncManager Integration Tests', () => {
         type: 'wifi',
       } as any);
 
-      // NetInfo リスナ�EをシミュレーチE
+      // NetInfo リスナ�EをシミュレーチE
       jest.mocked(NetInfo.addEventListener).mock.calls[0]?.[0]({
         isConnected: true,
         isInternetReachable: true,
@@ -170,21 +170,21 @@ describe('SyncManager Integration Tests', () => {
       }, 100);
     });
 
-    it('オフラインモード中のローカルチE�Eタアクセス', async () => {
+    it('オフラインモード中のローカルチE�Eタアクセス', async () => {
       jest.mocked(AsyncStorage.setItem).mockResolvedValue();
 
-      // オフラインの場合、機�E可否を確誁E
+      // オフラインの場合、機�E可否を確誁E
       const canRecord = offlineProvider.isFeatureAvailableOffline('recordQuestCompletion');
       expect(canRecord).toBe(true);
 
-      // ファイルアチE�Eロード�Eオフライン時に利用不可
+      // ファイルアチE�Eロード�Eオフライン時に利用不可
       const canUpload = offlineProvider.isFeatureAvailableOffline('uploadEvidence');
       expect(canUpload).toBe(false);
     });
   });
 
   describe('conflict detection and resolution', () => {
-    it('チE�Eタ競合を検�Eできる', async () => {
+    it('チE�Eタ競合を検�Eできる', async () => {
       const localData = {
         id: 'quest-1',
         title: 'Local Quest',
@@ -208,7 +208,7 @@ describe('SyncManager Integration Tests', () => {
       expect(conflict?.resolution).toBe('unresolved');
     });
 
-    it('競合をサーバ�E優先で解決できる', async () => {
+    it('競合をサーバ�E優先で解決できる', async () => {
       jest.mocked(AsyncStorage.setItem).mockResolvedValue();
 
       const conflict = {
@@ -231,7 +231,7 @@ describe('SyncManager Integration Tests', () => {
       expect(conflict.resolution).toBe('resolved');
     });
 
-    it('重要な競合�Eユーザーに通知できる', async () => {
+    it('重要な競合�Eユーザーに通知できる', async () => {
       jest.mocked(AsyncStorage.setItem).mockResolvedValue();
 
       const localData = {
@@ -289,7 +289,7 @@ describe('SyncManager Integration Tests', () => {
   });
 
   describe('retry logic with conflicts', () => {
-    it('リトライ時に同じ競合が再検�EされめE, async () => {
+    it('リトライ時に同じ競合が再検�EされめE, async () => {
       jest.mocked(AsyncStorage.setItem).mockResolvedValue();
 
       const localData = {
@@ -304,7 +304,7 @@ describe('SyncManager Integration Tests', () => {
         updated_at: new Date('2024-01-02').toISOString(),
       };
 
-      // 1回目の検�E
+      // 1回目の検�E
       const conflict1 = await conflictResolver.detectConflict(
         'quest',
         'quest-1',
@@ -314,7 +314,7 @@ describe('SyncManager Integration Tests', () => {
 
       expect(conflict1).not.toBeNull();
 
-      // 2回目の検�E�E�リトライ�E�E
+      // 2回目の検�E�E�リトライ�E�E
       const conflict2 = await conflictResolver.detectConflict(
         'quest',
         'quest-1',
@@ -326,7 +326,7 @@ describe('SyncManager Integration Tests', () => {
       expect(conflict2?.id).not.toBe(conflict1?.id); // 新しいIDが生成される
     });
 
-    it('失敗したアイチE��はリトライキューに戻されめE, async () => {
+    it('失敗したアイチE��はリトライキューに戻されめE, async () => {
       jest.mocked(AsyncStorage.setItem).mockResolvedValue();
 
       const itemId = await syncManager.queueOperation(
@@ -364,7 +364,7 @@ describe('SyncManager Integration Tests', () => {
       });
 
       // エラーをシミュレーチE
-      // �E�実裁E��応じてトリガー方法を調整�E�E
+      // �E�実裁E��応じてトリガー方法を調整�E�E
     });
   });
 
@@ -410,14 +410,14 @@ describe('SyncManager Integration Tests', () => {
       });
     });
 
-    it('同期完亁E��ベントを購読できる', async (done) => {
+    it('同期完亁E��ベントを購読できる', async (done) => {
       syncManager.getSyncCompleted$().subscribe((result) => {
         expect(result).toHaveProperty('success');
         done();
       });
 
-      // 同期完亁E��シミュレーチE
-      // �E�実裁E��応じてトリガー方法を調整�E�E
+      // 同期完亁E��シミュレーチE
+      // �E�実裁E��応じてトリガー方法を調整�E�E
     });
 
     it('同期開始イベントを購読できる', async (done) => {
@@ -427,12 +427,12 @@ describe('SyncManager Integration Tests', () => {
       });
 
       // 同期開始をシミュレーチE
-      // �E�実裁E��応じてトリガー方法を調整�E�E
+      // �E�実裁E��応じてトリガー方法を調整�E�E
     });
   });
 
   describe('full sync lifecycle', () => {
-    it('操作キューイング ↁE同期開姁EↁE完亁E�E完�Eフロー', async () => {
+    it('操作キューイング ↁE同期開姁EↁE完亁E�E完�Eフロー', async () => {
       jest.mocked(AsyncStorage.setItem).mockResolvedValue();
 
       // 1. 操作をキューイング
@@ -455,12 +455,12 @@ describe('SyncManager Integration Tests', () => {
         syncStarted = true;
       });
 
-      // 4. 手動同期をトリガー�E�オンライン時！E
+      // 4. 手動同期をトリガー�E�オンライン時！E
       if (statsBefore.isOnline) {
         try {
           await syncManager.syncNow();
         } catch (error) {
-          // エラーは許容�E�モチE��環墁E��E
+          // エラーは許容�E�モチE��環墁E��E
         }
       }
 
@@ -476,7 +476,7 @@ describe('SyncManager Integration Tests', () => {
       // 初期状態：オンライン
       expect(provider.isOnline()).toBe(true);
 
-      // オフラインに刁E��替ぁE
+      // オフラインに刁E��替ぁE
       jest.mocked(NetInfo.addEventListener).mock.calls[0]?.[0]({
         isConnected: false,
         isInternetReachable: false,
@@ -496,13 +496,13 @@ describe('SyncManager Integration Tests', () => {
   });
 
   describe('cleanup and teardown', () => {
-    it('SyncManager がクリーンアチE�Eできる', async () => {
+    it('SyncManager がクリーンアチE�Eできる', async () => {
       await syncManager.destroy();
-      // インスタンスが破棁E��れてぁE��
+      // インスタンスが破棁E��れてぁE��
       expect((SyncManager as any).instance).toBeNull();
     });
 
-    it('褁E��のマネージャーが正しくクリーンアチE�EされめE, async () => {
+    it('褁E��のマネージャーが正しくクリーンアチE�EされめE, async () => {
       const bgManager = BackgroundSyncManager.getInstance();
       const provider = OfflineDataProvider.getInstance();
 
@@ -510,8 +510,8 @@ describe('SyncManager Integration Tests', () => {
       await bgManager.destroy();
       await provider.destroy();
 
-      // すべてのマネージャーが破棁E��れてぁE��
-      expect(true).toBe(true); // 破棁E��成功した
+      // すべてのマネージャーが破棁E��れてぁE��
+      expect(true).toBe(true); // 破棁E��成功した
     });
   });
 });

@@ -1,10 +1,10 @@
 /**
  * OfflineMode.test.ts
- * オフラインモード機�EのユニットテスチE
+ * オフラインモード機�EのユニットテスチE
  *
- * チE��ト対象:
+ * チE��ト対象:
  * - OfflineDataProvider のネットワーク状態検知
- * - ローカルチE�Eタの取征E
+ * - ローカルチE�Eタの取征E
  * - OfflineSyncQueueManager のキュー管琁E
  * - オフラインモード変更イベンチE
  */
@@ -21,7 +21,7 @@ import {
 } from './OfflineSyncQueueManager';
 import { SyncQueueItem } from '@/core/domain/entities/SyncQueue';
 
-// モチE��
+// モチE��
 jest.mock('@react-native-async-storage/async-storage');
 jest.mock('@react-native-community/netinfo');
 jest.mock('@/core/data/datasources/LocalDataSource');
@@ -52,7 +52,7 @@ describe('OfflineDataProvider', () => {
       expect(state.isOnline).toBe(true);
     });
 
-    it('初期状態�Eオンライン', async () => {
+    it('初期状態�Eオンライン', async () => {
       jest.mocked(NetInfo.fetch).mockResolvedValueOnce({
         isConnected: true,
         isInternetReachable: true,
@@ -64,7 +64,7 @@ describe('OfflineDataProvider', () => {
       expect(provider.isOnline()).toBe(true);
     });
 
-    it('ネットワーク接続なし�E場合�Eオフライン', async () => {
+    it('ネットワーク接続なし�E場合�Eオフライン', async () => {
       jest.mocked(NetInfo.fetch).mockResolvedValueOnce({
         isConnected: false,
         isInternetReachable: false,
@@ -78,7 +78,7 @@ describe('OfflineDataProvider', () => {
   });
 
   describe('network state changes', () => {
-    it('オンラインからオフラインに変更されめE, async (done) => {
+    it('オンラインからオフラインに変更される', async (done) => {
       await provider.initialize();
 
       provider.getOfflineModeChanged$().subscribe((state) => {
@@ -97,7 +97,7 @@ describe('OfflineDataProvider', () => {
       } as any);
     });
 
-    it('オフラインからオンラインに変更されめE, async (done) => {
+    it('オフラインからオンラインに変更される', async (done) => {
       jest.mocked(NetInfo.fetch).mockResolvedValueOnce({
         isConnected: false,
         isInternetReachable: false,
@@ -127,15 +127,15 @@ describe('OfflineDataProvider', () => {
   });
 
   describe('offline features', () => {
-    it('オフラインで利用可能な機�Eを確認できる', async () => {
+    it('オフラインで利用可能な機�Eを確認できる', async () => {
       await provider.initialize();
 
-      // 閲覧機�Eは利用可能
+      // 閲覧機�Eは利用可能
       expect(provider.isFeatureAvailableOffline('viewGoals')).toBe(true);
       expect(provider.isFeatureAvailableOffline('viewQuests')).toBe(true);
       expect(provider.isFeatureAvailableOffline('recordQuestCompletion')).toBe(true);
 
-      // ファイルアチE�Eロード�E利用不可
+      // ファイルアチE�Eロード�E利用不可
       expect(provider.isFeatureAvailableOffline('uploadEvidence')).toBe(false);
     });
   });
@@ -212,7 +212,7 @@ describe('OfflineSyncQueueManager', () => {
       expect(manager.getQueueSize()).toBe(1);
     });
 
-    it('褁E��の操作をキューに追加できる', async () => {
+    it('褁E��の操作をキューに追加できる', async () => {
       jest.mocked(AsyncStorage.setItem).mockResolvedValue();
 
       await manager.queueOperationOffline(
@@ -232,7 +232,7 @@ describe('OfflineSyncQueueManager', () => {
       expect(manager.getQueueSize()).toBe(2);
     });
 
-    it('キューが満杯の場合�Eエラーを発生させる', async () => {
+    it('キューが満杯の場合�Eエラーを発生させる', async () => {
       // キューをシミュレートで満杯にする
       const queueArray = Array.from({ length: 1000 }, (_, i) => ({
         id: `item-${i}`,
@@ -292,7 +292,7 @@ describe('OfflineSyncQueueManager', () => {
       expect(manager.getQueueSize()).toBe(1);
     });
 
-    it('ペンチE��ング操作数を取得できる', async () => {
+    it('ペンチE��ング操作数を取得できる', async () => {
       jest.mocked(AsyncStorage.setItem).mockResolvedValue();
 
       await manager.queueOperationOffline('complete_quest', 'quest', 'quest-1', {});
@@ -318,7 +318,7 @@ describe('OfflineSyncQueueManager', () => {
   });
 
   describe('queue removal', () => {
-    it('キューからアイチE��を削除できる', async () => {
+    it('キューからアイチE��を削除できる', async () => {
       jest.mocked(AsyncStorage.setItem).mockResolvedValue();
 
       const itemId = await manager.queueOperationOffline(
@@ -335,7 +335,7 @@ describe('OfflineSyncQueueManager', () => {
       expect(manager.getQueueSize()).toBe(0);
     });
 
-    it('存在しなぁE��イチE��を削除しよぁE��しても例外�E発生しなぁE, async () => {
+    it('存在しなぁE��イチE��を削除しよぁE��しても例外�E発生しなぁE, async () => {
       jest.mocked(AsyncStorage.setItem).mockResolvedValue();
 
       await expect(manager.removeQueuedItem('nonexistent')).resolves.not.toThrow();
@@ -358,15 +358,15 @@ describe('OfflineSyncQueueManager', () => {
   });
 
   describe('queue priority', () => {
-    it('キューを�EリオリチE��でソートできる', async () => {
+    it('キューを�EリオリチE��でソートできる', async () => {
       jest.mocked(AsyncStorage.setItem).mockResolvedValue();
 
-      // 操作をランダムな頁E��で追加
+      // 操作をランダムな頁E��で追加
       await manager.queueOperationOffline('create', 'quest', 'quest-1', {});
       await manager.queueOperationOffline('delete', 'goal', 'goal-1', {});
       await manager.queueOperationOffline('update', 'quest', 'quest-2', {});
 
-      // キューをフラチE��ュ準備�E�ソート実施�E�E
+      // キューをフラチE��ュ準備�E�ソート実施�E�E
       const sortedQueue = await manager.prepareQueueForSync();
 
       // delete > update > create の優先度なので
@@ -392,7 +392,7 @@ describe('OfflineSyncQueueManager', () => {
   });
 
   describe('queue events', () => {
-    it('アイチE��キューイングイベントが発火されめE, async (done) => {
+    it('アイチE��キューイングイベントが発火されめE, async (done) => {
       jest.mocked(AsyncStorage.setItem).mockResolvedValue();
 
       manager.getItemQueued$().subscribe((item) => {
@@ -403,7 +403,7 @@ describe('OfflineSyncQueueManager', () => {
       await manager.queueOperationOffline('complete_quest', 'quest', 'quest-1', {});
     });
 
-    it('アイチE��削除イベントが発火されめE, async (done) => {
+    it('アイチE��削除イベントが発火されめE, async (done) => {
       jest.mocked(AsyncStorage.setItem).mockResolvedValue();
 
       const itemId = await manager.queueOperationOffline(
@@ -421,7 +421,7 @@ describe('OfflineSyncQueueManager', () => {
       await manager.removeQueuedItem(itemId);
     });
 
-    it('キューフラチE��ュ開始イベントが発火されめE, async (done) => {
+    it('キューフラチE��ュ開始イベントが発火されめE, async (done) => {
       jest.mocked(AsyncStorage.setItem).mockResolvedValue();
 
       await manager.queueOperationOffline('complete_quest', 'quest', 'quest-1', {});
@@ -434,7 +434,7 @@ describe('OfflineSyncQueueManager', () => {
       await manager.prepareQueueForSync();
     });
 
-    it('キューフラチE��ュ完亁E��ベントが発火されめE, async (done) => {
+    it('キューフラチE��ュ完亁E��ベントが発火されめE, async (done) => {
       manager.getQueueFlushCompleted$().subscribe((count) => {
         expect(count).toBe(5);
         done();
@@ -453,7 +453,7 @@ describe('OfflineSyncQueueManager', () => {
       expect(AsyncStorage.setItem).toHaveBeenCalled();
     });
 
-    it('キューが復允E��れる', async () => {
+    it('キューが復允E��れる', async () => {
       const mockQueue = [
         {
           id: 'item-1',
@@ -478,7 +478,7 @@ describe('OfflineSyncQueueManager', () => {
   });
 
   describe('failed items', () => {
-    it('失敗したアイチE��を�Eークできる', async () => {
+    it('失敗したアイチE��を�Eークできる', async () => {
       jest.mocked(AsyncStorage.setItem).mockResolvedValue();
 
       const itemId = await manager.queueOperationOffline(
