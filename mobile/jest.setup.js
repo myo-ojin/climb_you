@@ -112,6 +112,28 @@ jest.mock('expo-local-authentication', () => ({
   },
 }));
 
+jest.mock('expo-web-browser', () => ({
+  openBrowserAsync: jest.fn().mockResolvedValue({ type: 'cancel' }),
+  dismissBrowser: jest.fn(),
+  openAuthSessionAsync: jest.fn().mockResolvedValue({ type: 'success', url: 'http://example.com' }),
+  maybeCompleteAuthSession: jest.fn(),
+}));
+
+jest.mock('expo-auth-session', () => ({
+  makeRedirectUri: jest.fn().mockReturnValue('http://localhost:8081'),
+  useAuthRequest: jest.fn(),
+  useAutoDiscovery: jest.fn(),
+  ResponseType: {
+    Code: 'code',
+    Token: 'token',
+  },
+  Prompt: {
+    Login: 'login',
+    None: 'none',
+    Consent: 'consent',
+  },
+}));
+
 // グローバルな console.error と console.warn を抑制（ノイズ削減）
 const originalError = console.error;
 const originalWarn = console.warn;
